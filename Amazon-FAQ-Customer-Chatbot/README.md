@@ -32,9 +32,10 @@ The chatbot retrieves relevant product information using **semantic search** and
 * React
 * CSS / Tailwind (optional)
 
+
 ### Deployment
 
-* Backend: Render
+* Backend: Hugging Face Spaces
 * Frontend: Vercel
 * Version Control: GitHub
 
@@ -104,7 +105,7 @@ http://127.0.0.1:8000/docs
 
 ## 🌐 Deployment
 
-* Backend deployed on **Render**
+* Backend deployed on **Hugging Face Spaces**
 * Frontend deployed on **Vercel**
 * Repository hosted on **GitHub**
 
