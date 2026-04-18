@@ -13,16 +13,17 @@ interface Source {
 }
 
 interface ResultsDisplayProps {
-  results: { // Changed from 'data' to 'results'
+  results: {
     answer: string
     sources: Source[]
     processing_time_ms?: number
   } | null
   isLoading: boolean
   query?: string 
+  onNewSearch: () => void; // <--- THIS WAS THE MISSING PIECE
 }
 
-const ResultsDisplay = ({ results, isLoading, query }: ResultsDisplayProps) => {
+const ResultsDisplay = ({ results, isLoading, query, onNewSearch }: ResultsDisplayProps) => {
   if (isLoading) {
     return (
       <AnimatedWrapper>
@@ -36,15 +37,7 @@ const ResultsDisplay = ({ results, isLoading, query }: ResultsDisplayProps) => {
     )
   }
 
-  if (!results) {
-    return (
-      <AnimatedWrapper>
-        <GlassCard className="p-6 mt-4 text-center text-gray-400">
-          Ask a question to see AI analysis results
-        </GlassCard>
-      </AnimatedWrapper>
-    )
-  }
+  if (!results) return null;
 
   return (
     <AnimatedWrapper>
@@ -52,7 +45,15 @@ const ResultsDisplay = ({ results, isLoading, query }: ResultsDisplayProps) => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div className="space-y-1">
-            <h3 className="text-xl font-bold text-white">AI Analysis Result</h3>
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-bold text-white">AI Analysis Result</h3>
+              <button 
+                onClick={onNewSearch}
+                className="text-xs bg-white/10 hover:bg-white/20 text-gray-300 px-2 py-1 rounded transition-colors"
+              >
+                Clear
+              </button>
+            </div>
             {query && <p className="text-xs text-gray-400 italic">Query: "{query}"</p>}
           </div>
 
