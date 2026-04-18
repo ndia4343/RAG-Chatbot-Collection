@@ -16,12 +16,20 @@ app = FastAPI(title="Amazon FAQ RAG API")
 # -----------------------------
 # CORS (Frontend support)
 # -----------------------------
+
+# List only your trusted frontend URLs
+origins = [
+    "http://localhost:3000",          # Local development
+    "http://127.0.0.1:3000",        # Alternative local
+    "https://your-vercel-app.vercel.app", # Replace with your REAL deployment URL later
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"], # Still allows GET, POST, etc.
+    allow_headers=["*"], # Still allows all headers
 )
 
 # -----------------------------
