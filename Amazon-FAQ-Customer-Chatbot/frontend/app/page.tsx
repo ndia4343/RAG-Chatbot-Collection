@@ -9,10 +9,27 @@ import LoadingSkeleton from '@/components/LoadingSkeleton'
 import TypingAnimation from '@/components/TypingAnimation'
 import ResultsDisplay from '@/components/ResultsDisplay'
 
+// Define the Source interface to match ResultsDisplay
+interface Source {
+  id: string
+  title: string
+  short_answer?: string
+  answer?: string
+  relevance?: number
+}
+
+// Define the full Results interface
+interface ChatResults {
+  answer: string
+  sources: Source[]
+  processing_time_ms?: number
+}
+
 export default function Home() {
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<{ answer: string; sources?: string[] } | null>(null)
+  // Updated the state type here
+  const [results, setResults] = useState<ChatResults | null>(null)
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -78,6 +95,7 @@ export default function Home() {
             <ResultsDisplay 
               query={query} 
               results={results} 
+              isLoading={loading} // Added isLoading prop as required by ResultsDisplay
               onNewSearch={() => { setResults(null); setQuery(''); }} 
             />
           )}
