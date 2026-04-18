@@ -39,9 +39,34 @@ class RAGPipeline:
         return results[0]['content'], results
 
 if __name__ == "__main__":
-    # Quick Test
+    # 1. Initialize the Pipeline
     tester = RAGPipeline()
-    tester.load_dataset("data/amazon_faq.csv")
-    ans, sources = tester.search("How do I track my order?")
-    print(f"Top Result: {sources[0]['title']}")
-    print(f"Confidence: {sources[0]['relevance']}")
+    
+    try:
+        # 2. Attempt to Load Dataset
+        print("🔍 Loading knowledge base...")
+        tester.load_dataset("data/amazon_faq.csv")
+        print(f"✅ Successfully indexed {len(tester.faq_data)} FAQ entries.")
+
+        # 3. Perform Test Search
+        test_query = "How do I track my order?"
+        print(f"\n📡 Testing Query: '{test_query}'")
+        
+        answer, sources = tester.search(test_query, top_k=3)
+
+        # 4. Detailed Console Output
+        print("-" * 50)
+        print(f"🤖 AI ANSWER: {answer}")
+        print("-" * 50)
+        
+        print("🔗 SOURCE CHIPS (Verification):")
+        if not sources:
+            print("⚠️ No relevant sources found.")
+        for i, src in enumerate(sources):
+            # Formatted exactly like your dashboard chips will look
+            print(f" [{i+1}] {src['title']} (Match: {src['relevance']:.2%})")
+            
+    except FileNotFoundError:
+        print("❌ Error: 'data/amazon_faq.csv' not found. Check your file path.")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
