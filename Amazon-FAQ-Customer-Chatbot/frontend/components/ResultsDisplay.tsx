@@ -19,13 +19,10 @@ interface ResultsDisplayProps {
     processing_time_ms?: number
   } | null
   isLoading: boolean
-  query?: string  // <--- Add this line
+  query?: string 
 }
 
-const ResultsDisplay = ({ data, isLoading, query }: ResultsDisplayProps) => { // <--- Add query here
-
-
-const ResultsDisplay = ({ data, isLoading }: ResultsDisplayProps) => {
+const ResultsDisplay = ({ data, isLoading, query }: ResultsDisplayProps) => {
   if (isLoading) {
     return (
       <AnimatedWrapper>
@@ -52,12 +49,12 @@ const ResultsDisplay = ({ data, isLoading }: ResultsDisplayProps) => {
   return (
     <AnimatedWrapper>
       <GlassCard className="p-6 mt-4 space-y-4">
-
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h3 className="text-xl font-bold text-white">
-            AI Analysis Result
-          </h3>
+          <div className="space-y-1">
+            <h3 className="text-xl font-bold text-white">AI Analysis Result</h3>
+            {query && <p className="text-xs text-gray-400 italic">Query: "{query}"</p>}
+          </div>
 
           {data.processing_time_ms && (
             <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-gray-300">
@@ -72,12 +69,9 @@ const ResultsDisplay = ({ data, isLoading }: ResultsDisplayProps) => {
         </div>
 
         {/* Sources */}
-        {data.sources?.length > 0 && (
+        {data.sources && data.sources.length > 0 && (
           <div className="pt-4 border-t border-white/10">
-            <h4 className="text-sm font-semibold text-gray-300 mb-2">
-              Sources
-            </h4>
-
+            <h4 className="text-sm font-semibold text-gray-300 mb-2">Sources</h4>
             <div className="flex flex-wrap gap-2">
               {data.sources.map((src, i) => (
                 <div
@@ -90,7 +84,6 @@ const ResultsDisplay = ({ data, isLoading }: ResultsDisplayProps) => {
             </div>
           </div>
         )}
-
       </GlassCard>
     </AnimatedWrapper>
   )
