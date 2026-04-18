@@ -19,7 +19,11 @@ interface ResultsDisplayProps {
     processing_time_ms?: number
   } | null
   isLoading: boolean
+  query?: string  // <--- Add this line
 }
+
+const ResultsDisplay = ({ data, isLoading, query }: ResultsDisplayProps) => { // <--- Add query here
+
 
 const ResultsDisplay = ({ data, isLoading }: ResultsDisplayProps) => {
   if (isLoading) {
