@@ -1,18 +1,47 @@
-FROM python:3.9
+FROM python:3.9-slim
 
-# This line is the most important—it stops FAISS from crashing!
-RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
+# -----------------------------
+# System dependencies (FAISS fix)
+# -----------------------------
+RUN apt-get update && apt-get install -y \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /code
+# -----------------------------
+# Work directory
+# -----------------------------
+WORKDIR /app
 
-# Tell the computer to look INSIDE the backend folder for your requirements
-COPY backend/requirements.txt /code/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+# -----------------------------
+# Copy backend requirements first (for caching)
+# -----------------------------
+COPY backend/requirements.txt /app/requirements.txt
 
-# Tell the computer to take everything INSIDE backend and put it here
-COPY backend/ .
+# Install dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 7860
+# -----------------------------
+# Copy backend code
+# -----------------------------
+COPY backend/ /app/backend/
 
-# Run the app
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+# -----------------------------
+# Copy dataset (IMPORTANT for RAG)
+# -----------------------------
+COPY dataset/ /app/dataset/
+
+# -----------------------------
+# Set Python path (important for imports)
+# -----------------------------
+ENV PYTHONPATH=/app/backend
+
+# -----------------------------
+# Expose FastAPI port
+# -----------------------------
+EXPOSE 8000
+
+# -----------------------------
+# Run FastAPI
+# -----------------------------
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
