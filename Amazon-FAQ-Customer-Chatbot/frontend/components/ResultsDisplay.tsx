@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { GlassCard } from './GlassCard'
+import GlassCard from './GlassCard'
 import AnimatedWrapper from './AnimatedWrapper'
 
 interface Source {
