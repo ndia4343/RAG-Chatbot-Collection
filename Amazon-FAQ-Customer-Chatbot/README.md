@@ -1,115 +1,151 @@
-# Amazon FAQ Customer Support Chatbot
+# 📌 Amazon RAG Chatbot (AI-Powered FAQ Assistant)
 
-This project is a **Retrieval-Augmented Generation (RAG) chatbot** that answers customer questions using an Amazon product dataset.
+A Retrieval-Augmented Generation (RAG) AI Chatbot built with FastAPI, FAISS, Sentence Transformers, and Next.js.
+It answers Amazon-related queries using a custom knowledge base with semantic search + AI retrieval system.
 
-The chatbot retrieves relevant product information using **semantic search** and returns the most relevant response to the user.
+# 🚀 Live Architecture
+Frontend (Next.js + Tailwind + Glass UI)
+        ↓ API Call
+Backend (FastAPI on Hugging Face Spaces)
+        ↓
+RAG Pipeline (FAISS + SentenceTransformer)
+        ↓
+Amazon FAQ Dataset (CSV)
 
----
+## ✨ Features
+🔍 AI-powered semantic search (FAISS vector database)
+🤖 RAG-based answer generation (context-aware responses)
+⚡ FastAPI backend (high-performance API)
+🎯 Sentence Transformers embedding model
+📊 Confidence-based ranking of results
+💬 Source-based answer verification
+🎨 Modern frontend (Glassmorphism UI + Dark/Light mode)
+🔄 Real-time query processing
+📡 Fully deployed (Vercel + Hugging Face)
 
-## 🚀 Features
-
-* **Semantic Search:** Uses sentence embeddings to retrieve the most relevant product information.
-* **Fast Retrieval:** Powered by FAISS vector search for efficient similarity matching.
-* **API Backend:** Built with FastAPI to handle chatbot queries.
-* **Modern Chat Interface:** Frontend built with Next.js.
-* **Scalable Architecture:** Designed so multiple RAG chatbots can be added in the repository.
-
----
-
-## 🛠 Tech Stack
-
-### Backend
-
-* Python
-* FastAPI
-* Sentence Transformers
-* FAISS Vector Search
-* Pandas / NumPy
-
-### Frontend
-
-* Next.js
-* React
-* CSS / Tailwind (optional)
-
-
-### Deployment
-
-* Backend: Hugging Face Spaces
-* Frontend: Vercel
-* Version Control: GitHub
-
----
-
-## 🧠 RAG Architecture
-
-User Query
-↓
-Frontend Chat Interface
-↓
-FastAPI Backend
-↓
-Sentence Transformer Embedding
-↓
-FAISS Vector Search
-↓
-Retrieve Relevant Product Information
-↓
-Return Answer to User
-
----
+## 🧠 Tech Stack
+Backend
+FastAPI
+FAISS (Vector Search)
+SentenceTransformers (MiniLM model)
+Pandas
+Python
+Frontend
+Next.js (App Router)
+TypeScript
+Tailwind CSS
+Framer Motion
+next-themes
+Deployment
+Hugging Face Spaces (Backend)
+Vercel (Frontend)
 
 ## 📂 Project Structure
-
-```
-RAG-Chatbot-Collection
+backend/
 │
-└── Amazon-FAQ-Customer-Chatbot
-    │
-    ├── backend
-    │   ├── main.py
-    │   ├── rag_engine.py
-    │   ├── requirements.txt
-    │   └── dataset
-    │       └── amazon_products.csv
-    │
-    ├── frontend
-    │   ├── pages
-    │   │   └── index.js
-    │   ├── styles
-    │   │   └── globals.css
-    │   └── package.json
-    │
-    └── README.md
-```
+├── main.py              # FastAPI app
+├── rag_pipeline.py      # RAG logic (FAISS + embeddings)
+├── database.py          # Logging + feedback system
+├── dataset/
+│    └── amazon_products.csv
+│
+└── requirements.txt
 
----
 
-## ⚙️ Running the Backend
+frontend/
+│
+├── app/
+├── components/
+├── lib/
+│    └── api.ts
+├── styles/
+└── tailwind.config.js
 
-Navigate to backend folder:
-
-```
-cd backend
+## ⚙️ Backend Setup (Local)
+1. Install dependencies
 pip install -r requirements.txt
+
+2. Run backend
 uvicorn main:app --reload
-```
 
-Open API documentation:
+Backend runs on:
 
-```
-http://127.0.0.1:8000/docs
-```
+http://localhost:8000
 
----
+## 🌐 API Endpoints
+🔹 Health Check
+GET /health
+Response:
+{
+  "status": "ok",
+  "docs_indexed": 120
+}
 
-## 🌐 Deployment
+## 🔹 Search (RAG Engine)
+POST /api/search
+Request:
+{
+  "query": "How do I track my order?",
+  "top_k": 3
+}
+Response:
+{
+  "log_id": 1,
+  "answer": "You can track your order using...",
+  "sources": [
+    {
+      "id": "12",
+      "title": "Order Tracking",
+      "short_answer": "Track via account page",
+      "answer": "You can track orders in your Amazon account...",
+      "relevance": 0.92
+    }
+  ],
+  "processing_time_ms": 120
+}
+🔹 Feedback API
+POST /api/feedback
 
-* Backend deployed on **Hugging Face Spaces**
-* Frontend deployed on **Vercel**
-* Repository hosted on **GitHub**
+## 🎨 Frontend Features
+Glassmorphism UI cards
+AI typing animation
+Loading skeleton system
+Glow animated background
+Dark/Light mode toggle
+Real-time API integration
+Source-based answer expansion
 
----
+## 🔐 CORS Configuration
+
+Backend supports:
+http://localhost:3000
+http://127.0.0.1:3000
+https://your-vercel-app.vercel.app
+
+## 📦 Environment Variables
+Frontend (.env.local)
+NEXT_PUBLIC_API_URL=https://your-huggingface-space.hf.space
+
+## 🚀 Deployment
+Backend (Hugging Face Spaces)
+Push code to GitHub
+Connect Hugging Face Space
+Add requirements.txt
+Deploy FastAPI app
+
+## Frontend (Vercel)
+1.Import GitHub repo
+2. Set environment variable:
+NEXT_PUBLIC_API_URL
+3. Deploy
+
+## 🧠 How It Works
+User enters query
+SentenceTransformer converts text → embeddings
+FAISS finds most similar FAQs
+RAG pipeline selects best answer
+API returns structured response
+Frontend displays answer + sources
 
 ## 📊 Dataset
 
