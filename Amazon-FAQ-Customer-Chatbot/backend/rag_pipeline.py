@@ -37,3 +37,11 @@ class RAGPipeline:
                 "relevance": float(scores[0][i])
             })
         return results[0]['content'], results
+
+if __name__ == "__main__":
+    # Quick Test
+    tester = RAGPipeline()
+    tester.load_dataset("data/amazon_faq.csv")
+    ans, sources = tester.search("How do I track my order?")
+    print(f"Top Result: {sources[0]['title']}")
+    print(f"Confidence: {sources[0]['relevance']}")
