@@ -4,39 +4,48 @@ from pydantic import BaseModel
 from typing import List, Optional
 import time
 
-# Import components
 from rag_pipeline import AmazonRAG
 from database import get_db, SearchLog, Feedback
 from sqlalchemy.orm import Session
 
+# -----------------------------
+# APP INIT
+# -----------------------------
 app = FastAPI(title="Amazon FAQ RAG API")
 
 # -----------------------------
-# CORS (Needed for Vercel Frontend)
+# CORS (Frontend support)
 # -----------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with frontend domain in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # -----------------------------
-# Initialize RAG Engine
+# RAG ENGINE
 # -----------------------------
 engine = AmazonRAG()
 
 
+# -----------------------------
+# STARTUP EVENT
+# -----------------------------
 @app.on_event("startup")
 def startup_event():
-    print("🔍 Loading RAG dataset...")
-    engine.load_dataset()
-    print(f"✅ Dataset loaded with {len(engine.data)} entries")
+    try:
+        print("🔍 Loading RAG dataset...")
+        engine.load_dataset()
+        print(f"✅ Dataset loaded with {len(engine.data)} entries")
+    except Exception as e:
+        print(f"❌ Startup error: {e}")
+        engine.data = []
 
 
 # -----------------------------
-# Request / Response Models
+# MODELS
 # -----------------------------
 class SearchRequest(BaseModel):
     query: str
@@ -65,18 +74,18 @@ class SearchResponse(BaseModel):
 
 
 # -----------------------------
-# Health Check
+# HEALTH CHECK
 # -----------------------------
 @app.get("/health")
 def health_check():
     return {
         "status": "ok",
-        "docs_indexed": len(engine.data)
+        "docs_indexed": len(engine.data) if engine.data else 0
     }
 
 
 # -----------------------------
-# Search Endpoint (Main RAG)
+# SEARCH ENDPOINT (RAG CORE)
 # -----------------------------
 @app.post("/api/search", response_model=SearchResponse)
 def search_faqs(request: SearchRequest, db: Session = Depends(get_db)):
@@ -85,8 +94,12 @@ def search_faqs(request: SearchRequest, db: Session = Depends(get_db)):
 
     query = request.query.strip()
 
+    # ✅ FIXED: proper placement
     if not query:
         raise HTTPException(status_code=400, detail="Query cannot be empty")
+
+    if engine.data is None or len(engine.data) == 0:
+        raise HTTPException(status_code=500, detail="Dataset not loaded")
 
     try:
         # Run RAG search
@@ -120,7 +133,7 @@ def search_faqs(request: SearchRequest, db: Session = Depends(get_db)):
 
 
 # -----------------------------
-# Feedback Endpoint
+# FEEDBACK ENDPOINT
 # -----------------------------
 @app.post("/api/feedback")
 def collect_feedback(request: FeedbackRequest, db: Session = Depends(get_db)):
@@ -131,7 +144,6 @@ def collect_feedback(request: FeedbackRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Search log not found")
 
     try:
-
         feedback = Feedback(
             log_id=request.log_id,
             is_helpful=request.is_helpful,
@@ -152,7 +164,7 @@ def collect_feedback(request: FeedbackRequest, db: Session = Depends(get_db)):
 
 
 # -----------------------------
-# Local Run
+# LOCAL RUN
 # -----------------------------
 if __name__ == "__main__":
     import uvicorn
