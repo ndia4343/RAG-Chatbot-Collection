@@ -13,7 +13,7 @@ interface Source {
 }
 
 interface ResultsDisplayProps {
-  data: {
+  results: { // Changed from 'data' to 'results'
     answer: string
     sources: Source[]
     processing_time_ms?: number
@@ -22,7 +22,7 @@ interface ResultsDisplayProps {
   query?: string 
 }
 
-const ResultsDisplay = ({ data, isLoading, query }: ResultsDisplayProps) => {
+const ResultsDisplay = ({ results, isLoading, query }: ResultsDisplayProps) => {
   if (isLoading) {
     return (
       <AnimatedWrapper>
@@ -36,7 +36,7 @@ const ResultsDisplay = ({ data, isLoading, query }: ResultsDisplayProps) => {
     )
   }
 
-  if (!data) {
+  if (!results) {
     return (
       <AnimatedWrapper>
         <GlassCard className="p-6 mt-4 text-center text-gray-400">
@@ -56,24 +56,24 @@ const ResultsDisplay = ({ data, isLoading, query }: ResultsDisplayProps) => {
             {query && <p className="text-xs text-gray-400 italic">Query: "{query}"</p>}
           </div>
 
-          {data.processing_time_ms && (
+          {results.processing_time_ms && (
             <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-gray-300">
-              {data.processing_time_ms} ms
+              {results.processing_time_ms} ms
             </span>
           )}
         </div>
 
         {/* Answer */}
         <div className="text-gray-200 leading-relaxed text-sm md:text-base">
-          {data.answer}
+          {results.answer}
         </div>
 
         {/* Sources */}
-        {data.sources && data.sources.length > 0 && (
+        {results.sources && results.sources.length > 0 && (
           <div className="pt-4 border-t border-white/10">
             <h4 className="text-sm font-semibold text-gray-300 mb-2">Sources</h4>
             <div className="flex flex-wrap gap-2">
-              {data.sources.map((src, i) => (
+              {results.sources.map((src, i) => (
                 <div
                   key={i}
                   className="px-3 py-1 rounded-full text-xs bg-white/10 text-gray-300 border border-white/10"
