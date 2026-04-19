@@ -1,104 +1,125 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
-import { FormModal } from '@/components/ui/Modal' // Assuming you saved the modal code in components/ui/Modal.tsx
+import { FileText, RefreshCw, Trash2, Database } from 'lucide-react'
 
-interface FAQ {
-  id: string
-  question: string
-  answer: string
-  category: string
-  views: number
-  helpful: number
-  lastUpdated: string
+// Replace with your actual Hugging Face Space URL
+const REFRESH_API_URL = "https://aikahan-amazon-rag-bot.hf.space/refresh";
+
+interface DatasetFile {
+  name: string;
+  type: 'pdf' | 'csv';
+  size: string;
+  lastSync: string;
 }
 
-const SAMPLE_FAQS: FAQ[] = [
-  { id: '1', question: 'How do I return a product?', answer: 'You can return most items within 30 days...', category: 'Returns', views: 1842, helpful: 95, lastUpdated: '2024-04-15' },
-  { id: '2', question: 'What is Amazon Prime?', answer: 'Amazon Prime is a membership program...', category: 'Prime', views: 1523, helpful: 98, lastUpdated: '2024-04-14' },
-  { id: '3', question: 'How to track my order?', answer: 'Go to Your Orders and click Track Package...', category: 'Orders', views: 1401, helpful: 92, lastUpdated: '2024-04-13' },
-];
-
 export default function KnowledgePage() {
-  const [faqs, setFaqs] = useState(SAMPLE_FAQS)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  
+  // In a real app, you'd fetch this from your backend. For now, we list your current files.
+  const [files, setFiles] = useState<DatasetFile[]>([
+    { name: 'amazon_faqs.csv', type: 'csv', size: '1.2 MB', lastSync: '2026-04-19' },
+    { name: 'shipping_policy.pdf', type: 'pdf', size: '450 KB', lastSync: '2026-04-20' },
+  ])
 
-  const deleteFaq = (id: string) => {
-    setFaqs(faqs.filter(faq => faq.id !== id))
-  }
-
-  const handleAddFaq = (formData: any) => {
-    const newFaq: FAQ = {
-      id: Math.random().toString(36).substr(2, 9),
-      question: formData.question,
-      answer: formData.answer,
-      category: formData.category,
-      views: 0,
-      helpful: 0,
-      lastUpdated: new Date().toISOString().split('T')[0]
+  const handleSync = async () => {
+    setIsSyncing(true)
+    setSyncStatus('idle')
+    
+    try {
+      const response = await fetch(REFRESH_API_URL, { method: 'POST' })
+      if (!response.ok) throw new Error("Sync failed")
+      
+      setSyncStatus('success')
+      // Update the "Last Sync" date for all files
+      setFiles(files.map(f => ({ ...f, lastSync: new Date().toISOString().split('T')[0] })))
+    } catch (err) {
+      setSyncStatus('error')
+    } finally {
+      setIsSyncing(false)
     }
-    setFaqs([newFaq, ...faqs])
   }
 
   return (
     <DashboardLayout>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ color: '#f1f5f9' }}>Knowledge Base</h1>
-          <p className="text-sm" style={{ color: '#64748b' }}>Manage and edit your FAQ library</p>
+          <h1 className="text-3xl font-black text-white light:text-slate-900 tracking-tight uppercase">
+            Knowledge <span className="text-[#9ef01a]">Base</span>
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">Manage the documents powering your AmzRAG engine.</p>
         </div>
-        {/* OPEN MODAL ON CLICK */}
+
         <button 
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:brightness-110" 
+          onClick={handleSync}
+          disabled={isSyncing}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg ${
+            isSyncing ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'
+          }`}
           style={{ background: '#9ef01a', color: '#0a1a00' }}
         >
-          + Add FAQ
+          <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+          {isSyncing ? 'SYNCING...' : 'SYNC KNOWLEDGE BASE'}
         </button>
       </div>
 
-      {/* THE FORM MODAL */}
-      <FormModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddFaq}
-        title="Add New Knowledge Entry"
-        fields={[
-          { name: 'question', label: 'Question', type: 'text', required: true },
-          { name: 'category', label: 'Category', type: 'select', options: ['Returns', 'Prime', 'Orders', 'Technical'], required: true },
-          { name: 'answer', label: 'Full Answer', type: 'textarea', required: true },
-        ]}
-      />
+      {/* SYNC STATUS TOAST */}
+      {syncStatus !== 'idle' && (
+        <div className={`mb-6 p-4 rounded-xl border flex justify-between items-center ${
+          syncStatus === 'success' ? 'bg-green-500/10 border-green-500/50 text-green-400' : 'bg-red-500/10 border-red-500/50 text-red-400'
+        }`}>
+          <span className="text-sm font-bold uppercase tracking-wider">
+            {syncStatus === 'success' ? '✅ Database Updated Successfully' : '❌ Sync Failed. Check Space Logs.'}
+          </span>
+          <button onClick={() => setSyncStatus('idle')} className="text-xs underline">Dismiss</button>
+        </div>
+      )}
 
-      <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(30,41,59,0.4)', border: '1px solid rgba(158,240,26,0.12)' }}>
-        <table className="w-full text-left border-collapse">
+      {/* FILES TABLE */}
+      <div className="glass-card overflow-hidden border border-white/5">
+        <table className="w-full text-left">
           <thead>
-            <tr style={{ background: 'rgba(158,240,26,0.05)' }}>
-              <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wider" style={{ color: '#9ef01a' }}>Question</th>
-              <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wider" style={{ color: '#9ef01a' }}>Category</th>
-              <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wider" style={{ color: '#9ef01a' }}>Views</th>
-              <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wider" style={{ color: '#9ef01a' }}>Actions</th>
+            <tr className="bg-[#9ef01a]/5 border-b border-white/5">
+              <th className="px-6 py-4 text-xs font-bold text-[#9ef01a] uppercase tracking-widest">Document</th>
+              <th className="px-6 py-4 text-xs font-bold text-[#9ef01a] uppercase tracking-widest">Type</th>
+              <th className="px-6 py-4 text-xs font-bold text-[#9ef01a] uppercase tracking-widest">Size</th>
+              <th className="px-6 py-4 text-xs font-bold text-[#9ef01a] uppercase tracking-widest">Last Synced</th>
+              <th className="px-6 py-4 text-xs font-bold text-[#9ef01a] uppercase tracking-widest">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[rgba(158,240,26,0.05)]">
-            {faqs.map((faq) => (
-              <tr key={faq.id} className="hover:bg-[rgba(158,240,26,0.02)] transition-colors">
-                <td className="px-5 py-4 text-sm" style={{ color: '#cbd5e1' }}>{faq.question}</td>
-                <td className="px-5 py-4 text-sm">
-                  <span className="px-2 py-1 rounded-md text-[10px] font-bold" style={{ background: 'rgba(158,240,26,0.1)', color: '#9ef01a' }}>
-                    {faq.category}
+          <tbody className="divide-y divide-white/5">
+            {files.map((file) => (
+              <tr key={file.name} className="hover:bg-white/5 transition-colors group">
+                <td className="px-6 py-5 flex items-center gap-3">
+                  <div className="p-2 bg-slate-800 rounded-lg text-[#9ef01a]">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <span className="text-sm font-medium text-slate-200 light:text-slate-700">{file.name}</span>
+                </td>
+                <td className="px-6 py-5">
+                  <span className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] font-bold text-slate-400 uppercase">
+                    {file.type}
                   </span>
                 </td>
-                <td className="px-5 py-4 text-sm" style={{ color: '#64748b' }}>{faq.views.toLocaleString()}</td>
-                <td className="px-5 py-4 text-sm">
-                   <button className="text-[#9ef01a] hover:underline mr-3">Edit</button>
-                   <button onClick={() => deleteFaq(faq.id)} className="text-red-400 hover:underline">Delete</button>
+                <td className="px-6 py-5 text-sm text-slate-500 italic">{file.size}</td>
+                <td className="px-6 py-5 text-sm text-slate-400">{file.lastSync}</td>
+                <td className="px-6 py-5">
+                  <button className="p-2 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* FOOTER INFO */}
+      <div className="mt-6 flex items-center gap-2 text-slate-500">
+        <Database className="w-4 h-4" />
+        <p className="text-xs italic">AmzRAG Vector Database: 1,402 entries indexed across all documents.</p>
       </div>
     </DashboardLayout>
   )
