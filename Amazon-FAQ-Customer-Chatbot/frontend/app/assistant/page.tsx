@@ -1,6 +1,5 @@
 'use client'
 
-import Sidebar from '@/components/dashboard/Sidebar'
 import { useState, useRef, useEffect } from 'react'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 
@@ -19,7 +18,7 @@ export default function AssistantPage() {
     {
       id: '1',
       role: 'assistant',
-      content: 'Welcome to the AmzRAG Assistant. I am ready to help you with the Amazon FAQ dataset.',
+      content: 'Welcome to the AmzRAG Assistant. I am ready to help you with your knowledge base (PDF/CSV).',
     }
   ])
   const [input, setInput] = useState('')
@@ -58,9 +57,9 @@ export default function AssistantPage() {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.answer || "I'm sorry, I couldn't find an answer in the FAQ dataset.",
+        content: data.answer || "I'm sorry, I couldn't find a matching answer in the provided documents.",
         confidence: data.confidence || 0.85,
-        sources: data.sources || ['Amazon FAQ CSV'],
+        sources: data.sources || ['Knowledge Base Extract'],
       }
       
       setMessages(prev => [...prev, aiResponse])
@@ -68,7 +67,7 @@ export default function AssistantPage() {
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "Error: Could not connect to the knowledge base. Please check if the Hugging Face Space is running.",
+        content: "Error: Could not connect to AmzRAG Engine. Please ensure your Hugging Face Space is active.",
       }
       setMessages(prev => [...prev, errorMsg])
     } finally {
@@ -78,62 +77,79 @@ export default function AssistantPage() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-140px)] max-w-5xl mx-auto">
+      <div className="flex flex-col h-[calc(100vh-140px)] max-w-5xl mx-auto p-4">
         
         {/* Chat Messages Area */}
-        <div className="flex-1 overflow-y-auto mb-6 pr-4 space-y-6 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto mb-6 pr-2 space-y-6 scrollbar-thin">
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] rounded-2xl p-4 ${
-                msg.role === 'user' 
-                  ? 'bg-brand text-black font-medium rounded-tr-none' 
-                  : 'bg-dark-card border border-dark-border text-gray-200 rounded-tl-none'
-              }`}>
-                {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-bold bg-brand/20 text-brand px-2 py-0.5 rounded border border-brand/30">
-                      {msg.confidence ? Math.round(msg.confidence * 100) : 100}% MATCH
+              <div 
+                className={`max-w-[85%] rounded-2xl p-5 shadow-lg transition-all duration-500 ${
+                  msg.role === 'user' 
+                    ? 'bg-[#9ef01a] text-[#0a1a00] font-semibold rounded-tr-none' 
+                    : 'glass-card border-l-4 border-[#9ef01a] rounded-tl-none'
+                }`}
+              >
+                {/* Assistant Label & Confidence Score */}
+                {msg.role === 'assistant' && msg.confidence && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-bold bg-[#9ef01a]/20 text-[#9ef01a] px-2 py-0.5 rounded border border-[#9ef01a]/30 uppercase tracking-widest">
+                      {Math.round(msg.confidence * 100)}% Match Confidence
                     </span>
                   </div>
                 )}
                 
-                <p className="text-sm leading-relaxed">{msg.content}</p>
+                {/* Message Content - Dynamic Text Colors for Theme Safety */}
+                <p className={`text-sm leading-relaxed ${
+                  msg.role === 'user' 
+                    ? 'text-[#0a1a00]' 
+                    : 'text-slate-300 dark:text-slate-300 light:text-slate-800'
+                }`}>
+                  {msg.content}
+                </p>
 
+                {/* Sources Section */}
                 {msg.sources && (
-                  <div className="mt-3 pt-3 border-t border-white/5 flex gap-2">
+                  <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap gap-2">
                     {msg.sources.map(s => (
-                      <span key={s} className="text-[10px] text-brand/80 italic">#{s}</span>
+                      <span key={s} className="text-[10px] text-[#9ef01a] font-medium opacity-80 uppercase tracking-tighter">
+                        # {s}
+                      </span>
                     ))}
                   </div>
                 )}
               </div>
             </div>
           ))}
+
+          {/* Loading Animation */}
           {isLoading && (
-            <div className="flex justify-start animate-pulse">
-              <div className="bg-dark-card border border-dark-border p-4 rounded-xl text-brand text-xs">
-                AI is searching knowledge base...
+            <div className="flex justify-start">
+              <div className="glass-card p-4 rounded-xl text-[#9ef01a] text-xs flex items-center gap-2 animate-pulse">
+                <div className="w-2 h-2 bg-[#9ef01a] rounded-full animate-bounce" />
+                AmzRAG is extracting knowledge...
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Form */}
-        <form onSubmit={handleSendMessage} className="relative flex items-center gap-3 bg-dark-secondary p-2 rounded-xl border border-dark-border shadow-2xl">
+        {/* Input Form - Premium Styling to match your Screenshot */}
+        <form onSubmit={handleSendMessage} className="relative flex items-center gap-3 bg-[#111827]/80 light:bg-white backdrop-blur-xl p-2 rounded-2xl border border-white/5 light:border-slate-200 shadow-2xl">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question about your FAQs..."
-            className="flex-1 bg-transparent border-none text-white px-4 py-3 outline-none placeholder:text-gray-500"
+            placeholder="Ask a question about your documents..."
+            className="flex-1 bg-transparent border-none text-white light:text-slate-900 px-4 py-3 outline-none placeholder:text-gray-500 font-medium"
           />
           
           <button 
             type="submit"
-            className="bg-gradient-to-tr from-brand-dark to-brand hover:from-brand hover:to-brand-hover shadow-[0_0_15px_rgba(158,240,26,0.3)] transition-all px-8 py-3 rounded-lg text-black font-bold text-sm uppercase tracking-wide"
+            disabled={isLoading}
+            className="bg-[#9ef01a] hover:bg-[#ccff33] shadow-[0_0_20px_rgba(158,240,26,0.3)] transition-all px-8 py-3 rounded-xl text-[#0a1a00] font-black text-sm uppercase tracking-widest disabled:opacity-50"
           >
-            Search
+            {isLoading ? '...' : 'Search'}
           </button>
         </form>
       </div>
