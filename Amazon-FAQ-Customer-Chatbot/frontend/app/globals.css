@@ -4,80 +4,51 @@
 
 :root {
   --brand: #9ef01a;
-  --brand-hover: #ccff33;
-  --brand-dark: #7acc00;
+  --brand-glow: rgba(158, 240, 26, 0.35);
   
-  /* --- DARK MODE (As seen on Dashboard) --- */
-  --dark-bg: #0a0f1a;
-  --dark-sidebar: #0d1526;
-  --dark-card: #111827;
-  --dark-border: rgba(158, 240, 26, 0.1);
-  --dark-text: #e2e8f0;
-
-  /* --- LIGHT MODE (As seen in the Chat Mockup) --- */
-  /* This is the white-to-light-blue gradient background */
-  --light-bg-gradient: linear-gradient(135deg, #ffffff 0%, #eef2ff 100%);
-  
-  /* The slight blue hue of your mockup cards in light mode */
-  --light-card: rgba(239, 246, 255, 0.8);
-  --light-border: rgba(59, 130, 246, 0.1); /* Subtle blue border */
-  --light-text: #0f172a; /* Slate for readable text */
+  /* DARK THEME (Screenshot 231232 style) */
+  --bg-dark: #0a0f1a;
+  --card-dark: #111827;
+  --sidebar-dark: #0d1526;
+  --border-dark: rgba(255, 255, 255, 0.05);
 }
 
 @layer base {
   body {
-    @apply antialiased transition-colors duration-300;
-    
-    /* Default is your Dark Theme */
-    background-color: var(--dark-bg);
-    color: var(--dark-text);
+    @apply antialiased transition-all duration-500;
+    background-color: var(--bg-dark);
+    color: #f1f5f9;
   }
 
-  /* --- The Light Mode Styling (Critical for the Mockup) --- */
+  /* LIGHT THEME (Whitish-Bluish Gradient style) */
   .light body {
-    /* Apply the specific gradient from your mockup */
-    background: var(--light-bg-gradient);
-    background-attachment: fixed; /* Keeps the gradient stable on scroll */
-    color: var(--light-text);
+    background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #e0e7ff 100%);
+    background-attachment: fixed;
+    color: #1e293b;
   }
 }
 
 @layer components {
-  /* Helper classes that use your theme variables */
-  .bg-brand { background-color: var(--brand); }
-  .text-brand { color: var(--brand); }
-
-  /* Premium Glassmorphism (Works in both modes) */
-  .glass-card {
-    @apply backdrop-blur-md border rounded-2xl;
-    
-    /* Dynamic styling based on the active theme */
-    background-color: var(--dark-card); /* Default (Dark) */
-    border-color: var(--dark-border);  /* Default (Dark) */
+  /* Settings Card Style from your Screenshot */
+  .settings-card {
+    @apply border transition-all duration-300 rounded-2xl p-6;
+    background-color: rgba(17, 24, 39, 0.7);
+    border-color: var(--border-dark);
   }
 
-  /* Adjust Glassmorphism for Light Mode to match mockup */
-  .light .glass-card {
-    background-color: var(--light-card);
-    border-color: var(--light-border);
-    @apply shadow-lg; /* Adds the SaaS feel */
+  .light .settings-card {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(99, 102, 241, 0.1);
+    @apply shadow-xl shadow-indigo-100/50 backdrop-blur-xl;
   }
 
-  /* Your Search Button Glow */
-  .btn-neon {
-    @apply bg-[#9ef01a] text-[#0a1a00] font-bold py-3 px-8 rounded-xl 
-           transition-all duration-300 shadow-[0_0_15px_rgba(158,240,26,0.3)]
-           hover:shadow-[0_0_25px_rgba(158,240,26,0.5)] hover:bg-[#ccff33];
+  /* Slider / Range Input styling to match your neon sliders */
+  input[type='range'] {
+    @apply accent-[#9ef01a] cursor-pointer;
   }
-}
 
-/* Custom Scrollbar */
-.scrollbar-thin::-webkit-scrollbar { width: 5px; }
-.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(158, 240, 26, 0.1); /* Dark mode default */
-  border-radius: 10px;
-}
-.light .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.2); /* Light mode blue hue */
+  /* Logo Glow */
+  .logo-glow {
+    box-shadow: 0 0 20px var(--brand-glow);
+  }
 }
