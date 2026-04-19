@@ -6,43 +6,55 @@
   --brand: #9ef01a;
   --brand-glow: rgba(158, 240, 26, 0.35);
   
-  /* DARK THEME (Screenshot 231232 style) */
+  /* DARK THEME */
   --bg-dark: #0a0f1a;
-  --card-dark: #111827;
+  --card-dark: rgba(17, 24, 39, 0.7);
   --sidebar-dark: #0d1526;
   --border-dark: rgba(255, 255, 255, 0.05);
+  --text-dark: #f1f5f9;
+
+  /* LIGHT THEME */
+  --bg-light: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #e0e7ff 100%);
+  --card-light: rgba(255, 255, 255, 0.8);
+  --text-light: #1e293b;
+  --border-light: rgba(99, 102, 241, 0.1);
 }
 
 @layer base {
   body {
-    @apply antialiased transition-all duration-500;
+    @apply antialiased transition-colors duration-500;
     background-color: var(--bg-dark);
-    color: #f1f5f9;
+    background-attachment: fixed;
+    color: var(--text-dark);
   }
 
-  /* LIGHT THEME (Whitish-Bluish Gradient style) */
+  /* RUTHLESS FIX: 
+     If class "light" is on the <html> tag, use this. 
+     Note: Gradients don't transition; 'background-color' does.
+  */
   .light body {
-    background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #e0e7ff 100%);
+    background: var(--bg-light);
     background-attachment: fixed;
-    color: #1e293b;
+    color: var(--text-light);
   }
 }
 
 @layer components {
-  /* Settings Card Style from your Screenshot */
-  .settings-card {
-    @apply border transition-all duration-300 rounded-2xl p-6;
-    background-color: rgba(17, 24, 39, 0.7);
+  /* Combined Glass-Card & Settings-Card Logic */
+  .settings-card, .glass-card {
+    @apply border transition-all duration-300 rounded-2xl p-6 backdrop-blur-xl;
+    background-color: var(--card-dark);
     border-color: var(--border-dark);
   }
 
-  .light .settings-card {
-    background-color: rgba(255, 255, 255, 0.8);
-    border-color: rgba(99, 102, 241, 0.1);
-    @apply shadow-xl shadow-indigo-100/50 backdrop-blur-xl;
+  .light .settings-card, .light .glass-card {
+    background-color: var(--card-light);
+    border-color: var(--border-light);
+    @apply shadow-xl shadow-indigo-100/50;
+    color: var(--text-light);
   }
 
-  /* Slider / Range Input styling to match your neon sliders */
+  /* Slider Logic */
   input[type='range'] {
     @apply accent-[#9ef01a] cursor-pointer;
   }
