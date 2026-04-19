@@ -44,24 +44,25 @@ export default function AssistantPage() {
     setIsLoading(true)
 
     try {
-      // In your AssistantPage.tsx
-     const response = await fetch(HUGGINGFACE_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: input }), // Matches 'question = request.get("question")' in Python
-     })
+      const response = await fetch(HUGGINGFACE_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: input }),
+      })
 
       if (!response.ok) throw new Error("Backend connection failed")
 
+      // --- MAPPING LOGIC START ---
       const data = await response.json()
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.answer || "I'm sorry, I couldn't find a matching answer in the provided documents.",
-        confidence: data.confidence || 0.85,
-        sources: data.sources || ['Knowledge Base Extract'],
+        content: data.answer || "I'm sorry, I couldn't find a matching answer.",
+        confidence: data.confidence, 
+        sources: data.sources,      
       }
+      // --- MAPPING LOGIC END ---
       
       setMessages(prev => [...prev, aiResponse])
     } catch (err) {
@@ -100,7 +101,7 @@ export default function AssistantPage() {
                   </div>
                 )}
                 
-                {/* Message Content - Dynamic Text Colors for Theme Safety */}
+                {/* Message Content */}
                 <p className={`text-sm leading-relaxed ${
                   msg.role === 'user' 
                     ? 'text-[#0a1a00]' 
@@ -110,50 +111,7 @@ export default function AssistantPage() {
                 </p>
 
                 {/* Sources Section */}
-                {msg.sources && (
+                {msg.sources && msg.sources.length > 0 && (
                   <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap gap-2">
                     {msg.sources.map(s => (
-                      <span key={s} className="text-[10px] text-[#9ef01a] font-medium opacity-80 uppercase tracking-tighter">
-                        # {s}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {/* Loading Animation */}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="glass-card p-4 rounded-xl text-[#9ef01a] text-xs flex items-center gap-2 animate-pulse">
-                <div className="w-2 h-2 bg-[#9ef01a] rounded-full animate-bounce" />
-                AmzRAG is extracting knowledge...
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Form - Premium Styling to match your Screenshot */}
-        <form onSubmit={handleSendMessage} className="relative flex items-center gap-3 bg-[#111827]/80 light:bg-white backdrop-blur-xl p-2 rounded-2xl border border-white/5 light:border-slate-200 shadow-2xl">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question about your documents..."
-            className="flex-1 bg-transparent border-none text-white light:text-slate-900 px-4 py-3 outline-none placeholder:text-gray-500 font-medium"
-          />
-          
-          <button 
-            type="submit"
-            disabled={isLoading}
-            className="bg-[#9ef01a] hover:bg-[#ccff33] shadow-[0_0_20px_rgba(158,240,26,0.3)] transition-all px-8 py-3 rounded-xl text-[#0a1a00] font-black text-sm uppercase tracking-widest disabled:opacity-50"
-          >
-            {isLoading ? '...' : 'Search'}
-          </button>
-        </form>
-      </div>
-    </DashboardLayout>
-  )
-}
+                      <span key
