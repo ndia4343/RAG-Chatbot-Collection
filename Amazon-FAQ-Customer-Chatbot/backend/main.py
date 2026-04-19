@@ -1,34 +1,3 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from rag_pipeline import AmazonRAG
-
-app = FastAPI()
-
-# 1. FIX: Added CORS Middleware (Stops the "Backend connection failed" error)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], 
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# 2. Initialize your pipeline
-engine = AmazonRAG()
-
-@app.on_event("startup")
-def startup():
-    try:
-        # Standard load on startup
-        engine.load_dataset() 
-    except Exception as e:
-        print(f"Dataset loading error: {e}")
-
-@app.get("/")
-def home():
-    return {"message": "AmzRAG API is online", "status": "active"}
-
-# 3. FIX: Changed from /search to /query to match your AssistantPage.tsx
 @app.post("/query")
 async def query_bot(request: dict):
     question = request.get("question")
@@ -37,25 +6,31 @@ async def query_bot(request: dict):
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
     try:
-        # Run RAG search from your rag_pipeline
-        top_answer, sources = engine.search(question)
+        # 1. Get the raw response from your engine
+        # We assume search() now returns the full LlamaIndex/LangChain response object
+        raw_response = engine.search(question)
+
+        # 2. RUTHLESS FIX: Extract Metadata correctly
+        # This builds the list of source objects your frontend is looking for
+        sources_list = []
+        
+        # If engine.search returns a LlamaIndex Response object:
+        if hasattr(raw_response, 'source_nodes'):
+            for node in raw_response.source_nodes:
+                name = node.metadata.get('file_name', 'System Knowledge')
+                # Avoid duplicates in the source list
+                if name not in [s["name"] for s in sources_list]:
+                    sources_list.append({"name": name})
+        
+        # 3. Handle the text answer
+        answer_text = str(raw_response)
 
         return {
-            "answer": top_answer,
-            "confidence": 0.95, # You can calculate actual score in rag_pipeline later
-            "sources": sources if sources else ["Amazon FAQ"]
+            "answer": answer_text,
+            "confidence": 0.95, 
+            "sources": sources_list if sources_list else [{"name": "Standard Database"}]
         }
 
     except Exception as e:
-        print("Search error:", e)
+        print(f"Search error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
-
-# 4. NEW: Sync logic for your Knowledge Base "Sync" button
-@app.post("/refresh")
-async def refresh_index():
-    try:
-        # This calls your pipeline to re-read the /dataset folder
-        engine.load_dataset() 
-        return {"status": "success", "message": "Knowledge base synchronized"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Refresh failed: {str(e)}")
