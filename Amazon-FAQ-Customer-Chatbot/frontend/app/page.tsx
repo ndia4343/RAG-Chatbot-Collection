@@ -1,3 +1,4 @@
+import Sidebar from '@/components/dashboard/Sidebar'
 'use client'
 
 import { useEffect } from 'react'
