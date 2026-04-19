@@ -3,7 +3,7 @@ import faiss
 import os
 import glob
 from sentence_transformers import SentenceTransformer
-from pypdf import PdfReader # Ensure this is in requirements.txt
+from pypdf import PdfReader 
 
 class AmazonRAG:
     def __init__(self):
@@ -18,23 +18,28 @@ class AmazonRAG:
                 glob.glob("*.csv") + glob.glob("*.pdf")
         
         if files:
-            return files[0] # Picks the first one found
-        raise FileNotFoundError("No knowledge base (CSV/PDF) found in dataset folder.")
+            return files[0] 
+        # Instead of crashing, we return None so the app can still start
+        return None
 
     def load_dataset(self):
         file_path = self.find_dataset()
-        print(f"📂 Loading knowledge from: {file_path}")
         
+        if not file_path:
+            print("⚠️ No knowledge base found. Starting in standby mode.")
+            self.data = pd.DataFrame(columns=["title", "answer"])
+            return
+
+        print(f"📂 Loading knowledge from: {file_path}")
         texts = []
         metadata = []
 
         if file_path.endswith('.csv'):
             self.data = pd.read_csv(file_path)
-            # Support any CSV by looking for common column names
             q_col = next((c for c in self.data.columns if 'question' in c.lower()), self.data.columns[0])
             a_col = next((c for c in self.data.columns if 'answer' in c.lower()), self.data.columns[-1])
             
-            for idx, row in self.data.iterrows():
+            for _, row in self.data.iterrows():
                 combined = f"{row[q_col]} {row[a_col]}"
                 texts.append(combined)
                 metadata.append({"title": str(row[q_col]), "answer": str(row[a_col])})
@@ -48,15 +53,19 @@ class AmazonRAG:
                     metadata.append({"title": f"PDF Page {i+1}", "answer": content})
             self.data = pd.DataFrame(metadata)
 
-        # Generate Embeddings
-        embeddings = self.model.encode(texts, convert_to_numpy=True)
-        dimension = embeddings.shape[1]
-        self.index = faiss.IndexFlatIP(dimension)
-        faiss.normalize_L2(embeddings)
-        self.index.add(embeddings)
-        print(f"✅ Indexed {len(texts)} chunks of knowledge.")
+        if texts:
+            embeddings = self.model.encode(texts, convert_to_numpy=True)
+            dimension = embeddings.shape[1]
+            self.index = faiss.IndexFlatIP(dimension)
+            faiss.normalize_L2(embeddings)
+            self.index.add(embeddings)
+            print(f"✅ Indexed {len(texts)} chunks of knowledge.")
 
     def search(self, query, top_k=3):
+        # Fallback if no index exists
+        if self.index is None:
+            return "I'm sorry, my knowledge base is currently empty. Please contact our support team at support@example.com.", []
+
         query_vec = self.model.encode([query], convert_to_numpy=True)
         faiss.normalize_L2(query_vec)
         scores, indices = self.index.search(query_vec, top_k)
@@ -72,8 +81,8 @@ class AmazonRAG:
                     "relevance": float(scores[0][i])
                 })
         
-        # Fallback for Support Team logic
-        if not results or results[0]["relevance"] < 0.4:
-            return "I'm sorry, I couldn't find that in my records. Please contact our support team at support@example.com or call 1-800-HELP.", results
+        # Professional Threshold: If relevance is low, trigger support message
+        if not results or results[0]["relevance"] < 0.35:
+            return "I couldn't find a definitive answer in my documentation. Please contact our support team at support@example.com or call 1-800-HELP.", results
             
         return results[0]["answer"], results
