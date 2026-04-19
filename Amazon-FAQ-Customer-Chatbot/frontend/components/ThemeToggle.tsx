@@ -2,26 +2,32 @@
 
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
+import { Sun, Moon } from 'lucide-react'
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  // Prevents hydration error
+  // Ensure component is mounted to avoid hydration mismatch
   useEffect(() => setMounted(true), [])
   if (!mounted) return null
 
   return (
     <button
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="p-2 rounded-lg transition-all border border-brand/20 bg-dark-secondary hover:border-brand/50 shadow-[0_0_10px_rgba(158,240,26,0.1)]"
-      title="Toggle Theme"
+      className="relative inline-flex h-6 w-11 items-center rounded-full bg-[#1e293b] border border-[#9ef01a]/20 transition-colors focus:outline-none"
     >
-      {theme === 'dark' ? (
-        <span className="text-brand">☀️ <span className="text-[10px] ml-1 uppercase font-bold">Light</span></span>
-      ) : (
-        <span className="text-dark-bg font-bold text-sm">🌙 <span className="text-[10px] ml-1 uppercase">Dark</span></span>
-      )}
+      <span
+        className={`${
+          theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+        } inline-block h-4 w-4 transform rounded-full bg-[#9ef01a] transition-transform flex items-center justify-center`}
+      >
+        {theme === 'dark' ? (
+          <Moon className="w-2 h-2 text-black" />
+        ) : (
+          <Sun className="w-2 h-2 text-black" />
+        )}
+      </span>
     </button>
   )
 }
