@@ -25,53 +25,54 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-[240px] bg-[#0d1526] border-r border-[#9ef01a]/10 flex flex-col h-screen sticky top-0">
-      {/* Brand Header */}
-      <div className="p-6 flex items-center gap-3 border-b border-white/5">
-        <div className="w-8 h-8 bg-[#9ef01a] rounded-lg grid place-items-center shadow-[0_0_15px_rgba(158,240,26,0.3)]">
-          <svg className="w-5 h-5 text-[#0a1a00]" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2l3 6 6.6 1-4.8 4.6 1.2 6.8L12 17l-6 3.4 1.2-6.8L2.4 9l6.6-1z"/>
+    <aside className="w-[260px] bg-[#0d1526] border-r border-[#9ef01a]/10 flex flex-col h-screen sticky top-0 shrink-0">
+      {/* BRAND HEADER - FIXES THE GIANT ICON */}
+      <div className="p-7 flex items-center gap-4 border-b border-white/5">
+        <div className="w-10 h-10 bg-[#9ef01a] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(158,240,26,0.4)] shrink-0">
+          {/* Strictly sized SVG to prevent layout collapse */}
+          <svg className="w-6 h-6 text-[#0a1a00]" viewBox="0 0 24 24" fill="currentColor">
+             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
           </svg>
         </div>
-        <span className="font-bold text-[#9ef01a] text-xl tracking-tight">AmzRAG</span>
+        <span className="font-extrabold text-[#9ef01a] text-2xl tracking-tighter">AmzRAG</span>
       </div>
       
-      {/* Navigation Links */}
-      <nav className="flex-1 p-4 space-y-1 mt-2">
+      {/* NAVIGATION LINKS */}
+      <nav className="flex-1 p-4 space-y-2 mt-4">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+              className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
                 isActive 
-                  ? 'bg-[#9ef01a]/10 text-[#9ef01a] font-semibold border border-[#9ef01a]/20' 
+                  ? 'bg-[#9ef01a]/10 text-[#9ef01a] font-bold border border-[#9ef01a]/20' 
                   : 'text-slate-400 hover:bg-white/5 hover:text-white'
               }`}
             >
-              <item.icon className={`w-4 h-4 ${isActive ? 'text-[#9ef01a]' : ''}`} />
-              <span className="text-sm">{item.name}</span>
+              <item.icon className={`w-5 h-5 ${isActive ? 'text-[#9ef01a]' : ''}`} />
+              <span className="text-sm font-medium">{item.name}</span>
             </Link>
           )
         })}
       </nav>
 
-      {/* Bottom Section */}
+      {/* BOTTOM SECTION */}
       <div className="p-4 border-t border-white/5 space-y-4">
         <div className="flex items-center justify-between px-2">
           <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">System Theme</span>
           <ThemeToggle />
         </div>
         
-        {/* Neutral Bot Profile */}
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#1e293b]/40 border border-white/5">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#9ef01a] to-[#7acc00] flex items-center justify-center text-[#0a1a00] font-bold text-sm shadow-lg">
+        {/* NEUTRAL BOT PROFILE */}
+        <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#1e293b]/40 border border-white/5">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#9ef01a] to-[#7acc00] flex items-center justify-center text-[#0a1a00] font-bold text-sm shadow-lg">
             AZ
           </div>
           <div className="overflow-hidden">
             <p className="text-xs font-bold text-white truncate">AmzRAG Assistant</p>
-            <p className="text-[10px] text-brand-dark font-medium uppercase tracking-tighter">AI Support Service</p>
+            <p className="text-[10px] text-[#9ef01a]/80 font-medium uppercase tracking-widest">AI Support Service</p>
           </div>
         </div>
       </div>
