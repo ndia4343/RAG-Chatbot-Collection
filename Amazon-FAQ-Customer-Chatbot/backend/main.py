@@ -177,3 +177,26 @@ def collect_feedback(request: FeedbackRequest, db: Session = Depends(get_db)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+# -----------------------------
+# DASHBOARD STATS ENDPOINT
+# -----------------------------
+@app.get("/api/stats")
+def get_dashboard_stats(db: Session = Depends(get_db)):
+    try:
+        # Pull real numbers from your database tables
+        total_logs = db.query(SearchLog).count()
+        helpful_count = db.query(Feedback).filter(Feedback.is_helpful == True).count()
+        
+        # Calculate percentage for your 'Helpful Rate' card
+        rate = (helpful_count / total_logs * 100) if total_logs > 0 else 0
+        
+        return {
+            "total_logs": total_logs,
+            "helpful_rate": f"{rate:.1f}%",
+            "status": "active",
+            "docs_indexed": len(engine.data) if engine.data else 0
+        }
+    except Exception as e:
+        print(f"Stats error: {e}")
+        # Fallback values so the frontend doesn't crash
+        return {"total_logs": 0, "helpful_rate": "0%", "status": "error"}
