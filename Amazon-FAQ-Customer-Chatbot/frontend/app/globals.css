@@ -6,30 +6,61 @@
   --brand: #9ef01a;
   --brand-hover: #ccff33;
   --brand-dark: #7acc00;
+  
+  /* --- DARK MODE (As seen on Dashboard) --- */
   --dark-bg: #0a0f1a;
+  --dark-sidebar: #0d1526;
   --dark-card: #111827;
   --dark-border: rgba(158, 240, 26, 0.1);
+  --dark-text: #e2e8f0;
+
+  /* --- LIGHT MODE (As seen in the Chat Mockup) --- */
+  /* This is the white-to-light-blue gradient background */
+  --light-bg-gradient: linear-gradient(135deg, #ffffff 0%, #eef2ff 100%);
+  
+  /* The slight blue hue of your mockup cards in light mode */
+  --light-card: rgba(239, 246, 255, 0.8);
+  --light-border: rgba(59, 130, 246, 0.1); /* Subtle blue border */
+  --light-text: #0f172a; /* Slate for readable text */
 }
 
 @layer base {
   body {
-    @apply bg-[#0a0f1a] text-[#e2e8f0] antialiased;
+    @apply antialiased transition-colors duration-300;
+    
+    /* Default is your Dark Theme */
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+  }
+
+  /* --- The Light Mode Styling (Critical for the Mockup) --- */
+  .light body {
+    /* Apply the specific gradient from your mockup */
+    background: var(--light-bg-gradient);
+    background-attachment: fixed; /* Keeps the gradient stable on scroll */
+    color: var(--light-text);
   }
 }
 
 @layer components {
-  /* This fixes the "Pathetic" white background issue */
-  .bg-brand {
-    background-color: var(--brand);
-  }
+  /* Helper classes that use your theme variables */
+  .bg-brand { background-color: var(--brand); }
+  .text-brand { color: var(--brand); }
 
-  .text-brand {
-    color: var(--brand);
-  }
-
-  /* Premium Glassmorphism for your SaaS look */
+  /* Premium Glassmorphism (Works in both modes) */
   .glass-card {
-    @apply bg-[#1e293b]/40 backdrop-blur-md border border-white/5 rounded-2xl;
+    @apply backdrop-blur-md border rounded-2xl;
+    
+    /* Dynamic styling based on the active theme */
+    background-color: var(--dark-card); /* Default (Dark) */
+    border-color: var(--dark-border);  /* Default (Dark) */
+  }
+
+  /* Adjust Glassmorphism for Light Mode to match mockup */
+  .light .glass-card {
+    background-color: var(--light-card);
+    border-color: var(--light-border);
+    @apply shadow-lg; /* Adds the SaaS feel */
   }
 
   /* Your Search Button Glow */
@@ -40,20 +71,13 @@
   }
 }
 
-/* Custom Scrollbar for the Chat Area */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 5px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+/* Custom Scrollbar */
+.scrollbar-thin::-webkit-scrollbar { width: 5px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(158, 240, 26, 0.1);
+  background: rgba(158, 240, 26, 0.1); /* Dark mode default */
   border-radius: 10px;
 }
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(158, 240, 26, 0.3);
+.light .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.2); /* Light mode blue hue */
 }
