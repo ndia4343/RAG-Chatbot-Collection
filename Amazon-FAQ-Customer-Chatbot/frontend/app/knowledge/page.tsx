@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { FormModal } from '@/components/ui/Modal' // Assuming you saved the modal code in components/ui/Modal.tsx
 
 interface FAQ {
