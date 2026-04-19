@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { MetricGrid } from '@/components/dashboard/MetricCard'
 
 export default function AnalyticsPage() {
