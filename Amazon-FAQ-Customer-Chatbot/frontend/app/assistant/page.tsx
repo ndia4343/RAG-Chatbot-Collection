@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 
 // REPLACE THIS with your actual Hugging Face Space URL
-const HUGGINGFACE_API_URL = "https://your-name-space.hf.space/query";
+const HUGGINGFACE_API_URL = "https://aikahan-amazon-rag-bot.hf.space/query";
 
 interface Message {
   id: string
