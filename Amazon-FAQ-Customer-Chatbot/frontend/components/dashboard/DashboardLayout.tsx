@@ -1,4 +1,3 @@
-import Sidebar from '@/components/dashboard/Sidebar'
 'use client'
 
 import Sidebar from './Sidebar'
