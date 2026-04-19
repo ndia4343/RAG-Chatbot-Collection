@@ -1,21 +1,66 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { MetricGrid } from '@/components/dashboard/MetricCard'
 
 export default function AnalyticsPage() {
+  // 1. Live State Management
+  const [liveData, setLiveData] = useState({ total_logs: 0, helpful_rate: '0%' })
+  const [loading, setLoading] = useState(true)
+
+  // 2. Fetch data from your FastAPI backend
+  useEffect(() => {
+    // Note: When deploying to Hugging Face, replace this URL with your Space URL
+    fetch('http://localhost:8000/api/stats')
+      .then(res => res.json())
+      .then(data => {
+        setLiveData(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error("Failed to load backend stats:", err)
+        setLoading(false)
+      })
+  }, [])
+
+  // 3. Map Live Data to your Metric Cards
   const metrics = [
-    { icon: '🔍', value: '24,582', label: 'Total Searches', change: '↑ 18% this month', changeType: 'up' as const },
-    { icon: '⚡', value: '0.32s', label: 'Avg Response Time', change: '↓ 0.08s improvement', changeType: 'up' as const },
-    { icon: '✓', value: '96.4%', label: 'Answer Accuracy', change: '↑ 1.2% this week', changeType: 'up' as const },
-    { icon: '👥', value: '3,421', label: 'Active Users', change: '↑ 24% growth', changeType: 'up' as const },
+    { 
+      icon: '🔍', 
+      value: loading ? '...' : liveData.total_logs.toLocaleString(), 
+      label: 'Total Searches', 
+      change: 'Real-time sync', 
+      changeType: 'up' as const 
+    },
+    { 
+      icon: '⚡', 
+      value: '0.32s', 
+      label: 'Avg Response Time', 
+      change: '↓ 0.08s improvement', 
+      changeType: 'up' as const 
+    },
+    { 
+      icon: '✓', 
+      value: loading ? '...' : liveData.helpful_rate, 
+      label: 'Satisfaction Rate', 
+      change: '↑ 1.2% this week', 
+      changeType: 'up' as const 
+    },
+    { 
+      icon: '👥', 
+      value: '3,421', 
+      label: 'Active Users', 
+      change: '↑ 24% growth', 
+      changeType: 'up' as const 
+    },
   ]
 
   return (
     <DashboardLayout>
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-1" style={{ color: '#f1f5f9' }}>Analytics Overview</h1>
-        <p className="text-sm" style={{ color: '#64748b' }}>System performance and user insights</p>
+        <p className="text-sm" style={{ color: '#64748b' }}>Live system performance and user insights</p>
       </div>
 
       <MetricGrid metrics={metrics} />
@@ -27,8 +72,6 @@ export default function AnalyticsPage() {
             <h3 className="text-[15px] font-semibold" style={{ color: '#f1f5f9' }}>Query Volume (Last 7 Days)</h3>
             <select className="px-3 py-1.5 rounded-md text-xs" style={{ background: 'rgba(158,240,26,0.08)', border: '1px solid rgba(158,240,26,0.2)', color: '#9ef01a' }}>
               <option>Last 7 days</option>
-              <option>Last 30 days</option>
-              <option>Last 90 days</option>
             </select>
           </div>
           <div className="p-5">
@@ -46,7 +89,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Top Queries */}
+        {/* Top Queries - Merged with placeholder logic */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(30,41,59,0.4)', border: '1px solid rgba(158,240,26,0.12)' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(158,240,26,0.08)' }}>
             <h3 className="text-[15px] font-semibold" style={{ color: '#f1f5f9' }}>Top Queries</h3>
@@ -73,7 +116,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Response Time Distribution */}
+      {/* Satisfaction Score - Now uses live data for the center percentage */}
       <div className="grid grid-cols-[2fr_1fr] gap-5">
         <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(30,41,59,0.4)', border: '1px solid rgba(158,240,26,0.12)' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(158,240,26,0.08)' }}>
@@ -101,7 +144,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* User Satisfaction */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(30,41,59,0.4)', border: '1px solid rgba(158,240,26,0.12)' }}>
           <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(158,240,26,0.08)' }}>
             <h3 className="text-[15px] font-semibold" style={{ color: '#f1f5f9' }}>Satisfaction Score</h3>
@@ -111,24 +153,16 @@ export default function AnalyticsPage() {
               <svg className="transform -rotate-90" viewBox="0 0 120 120">
                 <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(15,23,42,0.8)" strokeWidth="8" />
                 <circle cx="60" cy="60" r="54" fill="none" stroke="#9ef01a" strokeWidth="8"
-                  strokeDasharray={`${2 * Math.PI * 54 * 0.91} ${2 * Math.PI * 54}`}
+                  strokeDasharray={`${2 * Math.PI * 54 * (parseFloat(liveData.helpful_rate) / 100)} ${2 * Math.PI * 54}`}
                   strokeLinecap="round" />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-3xl font-bold" style={{ color: '#9ef01a' }}>91%</div>
+                  <div className="text-3xl font-bold" style={{ color: '#9ef01a' }}>
+                    {loading ? '...' : liveData.helpful_rate}
+                  </div>
                   <div className="text-[10px]" style={{ color: '#64748b' }}>Satisfied</div>
                 </div>
-              </div>
-            </div>
-            <div className="flex gap-4 text-center">
-              <div>
-                <div className="text-lg font-bold" style={{ color: '#22c55e' }}>22,458</div>
-                <div className="text-[10px]" style={{ color: '#64748b' }}>👍 Helpful</div>
-              </div>
-              <div>
-                <div className="text-lg font-bold" style={{ color: '#ef4444' }}>2,124</div>
-                <div className="text-[10px]" style={{ color: '#64748b' }}>👎 Not helpful</div>
               </div>
             </div>
           </div>
