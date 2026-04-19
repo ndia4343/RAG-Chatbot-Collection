@@ -44,11 +44,12 @@ export default function AssistantPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(HUGGINGFACE_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: input }),
-      })
+      // In your AssistantPage.tsx
+     const response = await fetch(HUGGINGFACE_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: input }), // Matches 'question = request.get("question")' in Python
+     })
 
       if (!response.ok) throw new Error("Backend connection failed")
 
