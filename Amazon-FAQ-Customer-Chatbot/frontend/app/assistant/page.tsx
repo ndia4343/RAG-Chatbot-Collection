@@ -1,5 +1,6 @@
 'use client'
 
+import Sidebar from '@/components/dashboard/Sidebar'
 import { useState, useRef, useEffect } from 'react'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 
