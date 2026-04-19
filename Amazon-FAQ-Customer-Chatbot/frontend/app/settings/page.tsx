@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import DashboardLayout from '@/components/dashboard/DashboardLayout'
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
