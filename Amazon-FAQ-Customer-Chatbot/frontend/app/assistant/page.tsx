@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import DashboardLayout from '@/components/dashboard/DashboardLayout'
 
 interface Message {
   id: string
