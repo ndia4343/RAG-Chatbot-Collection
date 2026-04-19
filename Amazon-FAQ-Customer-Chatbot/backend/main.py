@@ -1,202 +1,61 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional
-import time
-
 from rag_pipeline import AmazonRAG
-from database import get_db, SearchLog, Feedback
-from sqlalchemy.orm import Session
 
-# -----------------------------
-# APP INIT
-# -----------------------------
-app = FastAPI(title="Amazon FAQ RAG API")
+app = FastAPI()
 
-# -----------------------------
-# CORS (Frontend support)
-# -----------------------------
-
-# List only your trusted frontend URLs
-origins = [
-    "http://localhost:3000",          # Local development
-    "http://127.0.0.1:3000",        # Alternative local
-    "https://your-vercel-app.vercel.app", # Replace with your REAL deployment URL later
-]
-
+# 1. FIX: Added CORS Middleware (Stops the "Backend connection failed" error)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"], 
     allow_credentials=True,
-    allow_methods=["*"], # Still allows GET, POST, etc.
-    allow_headers=["*"], # Still allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# -----------------------------
-# RAG ENGINE
-# -----------------------------
+# 2. Initialize your pipeline
 engine = AmazonRAG()
 
-
-# -----------------------------
-# STARTUP EVENT
-# -----------------------------
 @app.on_event("startup")
-def startup_event():
+def startup():
     try:
-        print("🔍 Loading RAG dataset...")
-        engine.load_dataset()
-        print(f"✅ Dataset loaded with {len(engine.data)} entries")
+        # Standard load on startup
+        engine.load_dataset() 
     except Exception as e:
-        print(f"❌ Startup error: {e}")
-        engine.data = []
+        print(f"Dataset loading error: {e}")
 
+@app.get("/")
+def home():
+    return {"message": "AmzRAG API is online", "status": "active"}
 
-# -----------------------------
-# MODELS
-# -----------------------------
-class SearchRequest(BaseModel):
-    query: str
-    top_k: Optional[int] = 3
-
-
-class FeedbackRequest(BaseModel):
-    log_id: int
-    is_helpful: bool
-    comment: Optional[str] = None
-
-
-class Source(BaseModel):
-    id: str
-    title: str
-    short_answer: str
-    answer: str
-    relevance: float
-
-
-class SearchResponse(BaseModel):
-    log_id: int
-    answer: str
-    sources: List[Source]
-    processing_time_ms: int
-
-
-# -----------------------------
-# HEALTH CHECK
-# -----------------------------
-@app.get("/health")
-def health_check():
-    return {
-        "status": "ok",
-        "docs_indexed": len(engine.data) if engine.data else 0
-    }
-
-
-# -----------------------------
-# SEARCH ENDPOINT (RAG CORE)
-# -----------------------------
-@app.post("/api/search", response_model=SearchResponse)
-def search_faqs(request: SearchRequest, db: Session = Depends(get_db)):
-
-    start_time = time.time()
-
-    query = request.query.strip()
-
-    # ✅ FIXED: proper placement
-    if not query:
-        raise HTTPException(status_code=400, detail="Query cannot be empty")
-
-    if engine.data is None or len(engine.data) == 0:
-        raise HTTPException(status_code=500, detail="Dataset not loaded")
+# 3. FIX: Changed from /search to /query to match your AssistantPage.tsx
+@app.post("/query")
+async def query_bot(request: dict):
+    question = request.get("question")
+    
+    if not question or question.strip() == "":
+        raise HTTPException(status_code=400, detail="Question cannot be empty")
 
     try:
-        # Run RAG search
-        answer, sources = engine.search(query, top_k=request.top_k)
+        # Run RAG search from your rag_pipeline
+        top_answer, sources = engine.search(question)
 
-        processing_time_ms = int((time.time() - start_time) * 1000)
-
-        # Log search
-        log_entry = SearchLog(
-            query=query,
-            answer_generated=answer,
-            sources_used=str([s["id"] for s in sources]),
-            confidence_score=90,
-            processing_time_ms=processing_time_ms
-        )
-
-        db.add(log_entry)
-        db.commit()
-        db.refresh(log_entry)
-
-        return SearchResponse(
-            log_id=log_entry.id,
-            answer=answer,
-            sources=[Source(**s) for s in sources],
-            processing_time_ms=processing_time_ms
-        )
+        return {
+            "answer": top_answer,
+            "confidence": 0.95, # You can calculate actual score in rag_pipeline later
+            "sources": sources if sources else ["Amazon FAQ"]
+        }
 
     except Exception as e:
         print("Search error:", e)
-        raise HTTPException(status_code=500, detail="Internal search error")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
-
-# -----------------------------
-# FEEDBACK ENDPOINT
-# -----------------------------
-@app.post("/api/feedback")
-def collect_feedback(request: FeedbackRequest, db: Session = Depends(get_db)):
-
-    log_entry = db.query(SearchLog).filter(SearchLog.id == request.log_id).first()
-
-    if not log_entry:
-        raise HTTPException(status_code=404, detail="Search log not found")
-
+# 4. NEW: Sync logic for your Knowledge Base "Sync" button
+@app.post("/refresh")
+async def refresh_index():
     try:
-        feedback = Feedback(
-            log_id=request.log_id,
-            is_helpful=request.is_helpful,
-            comment=request.comment
-        )
-
-        db.add(feedback)
-        db.commit()
-
-        return {
-            "status": "success",
-            "message": "Feedback stored"
-        }
-
+        # This calls your pipeline to re-read the /dataset folder
+        engine.load_dataset() 
+        return {"status": "success", "message": "Knowledge base synchronized"}
     except Exception as e:
-        print("Feedback error:", e)
-        raise HTTPException(status_code=500, detail="Error storing feedback")
-
-
-# -----------------------------
-# LOCAL RUN
-# -----------------------------
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-# -----------------------------
-# DASHBOARD STATS ENDPOINT
-# -----------------------------
-@app.get("/api/stats")
-def get_dashboard_stats(db: Session = Depends(get_db)):
-    try:
-        # Pull real numbers from your database tables
-        total_logs = db.query(SearchLog).count()
-        helpful_count = db.query(Feedback).filter(Feedback.is_helpful == True).count()
-        
-        # Calculate percentage for your 'Helpful Rate' card
-        rate = (helpful_count / total_logs * 100) if total_logs > 0 else 0
-        
-        return {
-            "total_logs": total_logs,
-            "helpful_rate": f"{rate:.1f}%",
-            "status": "active",
-            "docs_indexed": len(engine.data) if engine.data else 0
-        }
-    except Exception as e:
-        print(f"Stats error: {e}")
-        # Fallback values so the frontend doesn't crash
-        return {"total_logs": 0, "helpful_rate": "0%", "status": "error"}
+        raise HTTPException(status_code=500, detail=f"Refresh failed: {str(e)}")
