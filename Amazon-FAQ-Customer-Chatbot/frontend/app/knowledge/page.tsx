@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import { FormModal } from '@/components/ui/Modal' // Assuming you saved the modal code in components/ui/Modal.tsx
 
 interface FAQ {
   id: string
@@ -20,12 +21,24 @@ const SAMPLE_FAQS: FAQ[] = [
 ];
 
 export default function KnowledgePage() {
-  // 1. We use setFaqs so the list can change when we delete something
   const [faqs, setFaqs] = useState(SAMPLE_FAQS)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // 2. This function filters out the ID we want to remove
   const deleteFaq = (id: string) => {
     setFaqs(faqs.filter(faq => faq.id !== id))
+  }
+
+  const handleAddFaq = (formData: any) => {
+    const newFaq: FAQ = {
+      id: Math.random().toString(36).substr(2, 9),
+      question: formData.question,
+      answer: formData.answer,
+      category: formData.category,
+      views: 0,
+      helpful: 0,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    }
+    setFaqs([newFaq, ...faqs])
   }
 
   return (
@@ -35,10 +48,28 @@ export default function KnowledgePage() {
           <h1 className="text-2xl font-bold mb-1" style={{ color: '#f1f5f9' }}>Knowledge Base</h1>
           <p className="text-sm" style={{ color: '#64748b' }}>Manage and edit your FAQ library</p>
         </div>
-        <button className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: '#9ef01a', color: '#0a1a00' }}>
+        {/* OPEN MODAL ON CLICK */}
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:brightness-110" 
+          style={{ background: '#9ef01a', color: '#0a1a00' }}
+        >
           + Add FAQ
         </button>
       </div>
+
+      {/* THE FORM MODAL */}
+      <FormModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddFaq}
+        title="Add New Knowledge Entry"
+        fields={[
+          { name: 'question', label: 'Question', type: 'text', required: true },
+          { name: 'category', label: 'Category', type: 'select', options: ['Returns', 'Prime', 'Orders', 'Technical'], required: true },
+          { name: 'answer', label: 'Full Answer', type: 'textarea', required: true },
+        ]}
+      />
 
       <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(30,41,59,0.4)', border: '1px solid rgba(158,240,26,0.12)' }}>
         <table className="w-full text-left border-collapse">
@@ -62,13 +93,7 @@ export default function KnowledgePage() {
                 <td className="px-5 py-4 text-sm" style={{ color: '#64748b' }}>{faq.views.toLocaleString()}</td>
                 <td className="px-5 py-4 text-sm">
                    <button className="text-[#9ef01a] hover:underline mr-3">Edit</button>
-                   {/* 3. The button now triggers the deleteFaq function */}
-                   <button 
-                     onClick={() => deleteFaq(faq.id)} 
-                     className="text-red-400 hover:underline"
-                   >
-                     Delete
-                   </button>
+                   <button onClick={() => deleteFaq(faq.id)} className="text-red-400 hover:underline">Delete</button>
                 </td>
               </tr>
             ))}
