@@ -20,7 +20,13 @@ const SAMPLE_FAQS: FAQ[] = [
 ];
 
 export default function KnowledgePage() {
-  const [faqs] = useState(SAMPLE_FAQS)
+  // 1. We use setFaqs so the list can change when we delete something
+  const [faqs, setFaqs] = useState(SAMPLE_FAQS)
+
+  // 2. This function filters out the ID we want to remove
+  const deleteFaq = (id: string) => {
+    setFaqs(faqs.filter(faq => faq.id !== id))
+  }
 
   return (
     <DashboardLayout>
@@ -48,11 +54,21 @@ export default function KnowledgePage() {
             {faqs.map((faq) => (
               <tr key={faq.id} className="hover:bg-[rgba(158,240,26,0.02)] transition-colors">
                 <td className="px-5 py-4 text-sm" style={{ color: '#cbd5e1' }}>{faq.question}</td>
-                <td className="px-5 py-4 text-sm"><span className="px-2 py-1 rounded-md text-[10px] font-bold" style={{ background: 'rgba(158,240,26,0.1)', color: '#9ef01a' }}>{faq.category}</span></td>
+                <td className="px-5 py-4 text-sm">
+                  <span className="px-2 py-1 rounded-md text-[10px] font-bold" style={{ background: 'rgba(158,240,26,0.1)', color: '#9ef01a' }}>
+                    {faq.category}
+                  </span>
+                </td>
                 <td className="px-5 py-4 text-sm" style={{ color: '#64748b' }}>{faq.views.toLocaleString()}</td>
                 <td className="px-5 py-4 text-sm">
                    <button className="text-[#9ef01a] hover:underline mr-3">Edit</button>
-                   <button className="text-red-400 hover:underline">Delete</button>
+                   {/* 3. The button now triggers the deleteFaq function */}
+                   <button 
+                     onClick={() => deleteFaq(faq.id)} 
+                     className="text-red-400 hover:underline"
+                   >
+                     Delete
+                   </button>
                 </td>
               </tr>
             ))}
