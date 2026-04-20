@@ -7,6 +7,23 @@ from rag_pipeline import AmazonRAG
 
 app = FastAPI()
 
+settings = {
+    "model": "mistral-7b",
+    "temperature": 0.7,
+    "top_k": 5,
+    "confidence": 0.6
+}
+
+@app.get("/settings")
+def get_settings():
+    return settings
+
+@app.post("/settings")
+def update_settings(data: dict):
+    settings.update(data)
+    return {"status": "updated", "settings": settings}
+
+
 # PROFESSIONAL CORS SETUP
 app.add_middleware(
     CORSMiddleware,
