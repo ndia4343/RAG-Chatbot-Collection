@@ -46,8 +46,11 @@ async def query_bot(request: dict):
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     try:
-        os.makedirs("dataset", exist_ok=True)
-        file_path = os.path.join("dataset", file.filename)
+       DATASET_PATH = "/data/dataset"
+
+      os.makedirs(DATASET_PATH, exist_ok=True)
+
+     file_path = os.path.join(DATASET_PATH, file.filename)
         
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
