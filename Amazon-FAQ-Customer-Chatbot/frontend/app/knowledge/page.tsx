@@ -4,67 +4,117 @@ import { useState, useEffect } from 'react'
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://aikahan-amazon-rag-bot.hf.space"
+  'https://aikahan-amazon-rag-bot.hf.space'
 
 export default function KnowledgeBasePanel() {
   const [files, setFiles] = useState<any[]>([])
   const [uploading, setUploading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  // Load files
+  // -----------------------------
+  // FETCH FILES (SAFE)
+  // -----------------------------
   const fetchFiles = async () => {
-    const res = await fetch(`${API_URL}/list-files`)
-    const data = await res.json()
-    setFiles(data)
+    try {
+      setError('')
+      const res = await fetch(`${API_URL}/list-files`)
+      const data = await res.json()
+      setFiles(data)
+    } catch (err) {
+      setError('Failed to load knowledge base')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
     fetchFiles()
   }, [])
 
-  // Upload file
+  // -----------------------------
+  // UPLOAD FILE (SAFE)
+  // -----------------------------
   const handleUpload = async (e: any) => {
     const file = e.target.files[0]
     if (!file) return
 
     const formData = new FormData()
-    formData.append("file", file)
+    formData.append('file', file)
 
     setUploading(true)
 
-    await fetch(`${API_URL}/upload`, {
-      method: "POST",
-      body: formData,
-    })
+    try {
+      const res = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        body: formData,
+      })
 
-    setUploading(false)
-    fetchFiles()
+      if (!res.ok) throw new Error('Upload failed')
+
+      await fetchFiles()
+    } catch (err) {
+      alert('Upload failed. Check backend.')
+    } finally {
+      setUploading(false)
+    }
   }
 
-  // Delete file
+  // -----------------------------
+  // DELETE FILE (SAFE)
+  // -----------------------------
   const handleDelete = async (name: string) => {
-    await fetch(`${API_URL}/delete-file/${encodeURIComponent(name)}`, {
-      method: "DELETE",
-    })
+    if (!confirm(`Delete ${name}?`)) return
 
-    fetchFiles()
+    try {
+      const res = await fetch(
+        `${API_URL}/delete-file/${encodeURIComponent(name)}`,
+        { method: 'DELETE' }
+      )
+
+      if (!res.ok) throw new Error('Delete failed')
+
+      setFiles((prev) => prev.filter((f) => f.name !== name))
+    } catch (err) {
+      alert('Delete failed. Backend error.')
+    }
   }
 
+  // -----------------------------
+  // LOADING STATE
+  // -----------------------------
+  if (loading) {
+    return (
+      <div className="p-6 bg-[#111827] rounded-2xl text-white">
+        Loading knowledge base...
+      </div>
+    )
+  }
+
+  // -----------------------------
+  // UI
+  // -----------------------------
   return (
     <div className="p-6 bg-[#111827] rounded-2xl border border-white/10">
 
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-5">
         <h2 className="text-white font-bold text-lg">
           Knowledge Base
         </h2>
 
-        <label className="bg-[#9ef01a] text-black px-4 py-2 rounded-lg font-bold cursor-pointer">
-          {uploading ? "Uploading..." : "Upload File"}
+        <label className="bg-[#9ef01a] text-black px-4 py-2 rounded-lg font-bold cursor-pointer hover:scale-105 transition">
+          {uploading ? 'Uploading...' : 'Upload File'}
           <input type="file" hidden onChange={handleUpload} />
         </label>
       </div>
 
-      {/* File List */}
+      {/* ERROR */}
+      {error && (
+        <p className="text-red-400 text-sm mb-3">{error}</p>
+      )}
+
+      {/* FILE LIST */}
       <div className="space-y-3">
         {files.length === 0 && (
           <p className="text-slate-500 text-sm">
