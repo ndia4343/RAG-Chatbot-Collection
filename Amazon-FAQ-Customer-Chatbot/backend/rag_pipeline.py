@@ -4,6 +4,8 @@ import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from pypdf import PdfReader
+import requests
+import os
 
 class AmazonRAG:
     def __init__(self):
