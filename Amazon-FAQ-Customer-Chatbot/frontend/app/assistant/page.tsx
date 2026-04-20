@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from 'react'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 
-// Using environment variables is safer for Vercel deployment
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://aikahan-amazon-rag-bot.hf.space";
+// 🔗 API CONFIG (stable single source of truth)
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://aikahan-amazon-rag-bot.hf.space"
 
 interface Message {
   id: string
@@ -19,21 +21,32 @@ export default function AssistantPage() {
     {
       id: '1',
       role: 'assistant',
-      content: 'I have successfully connected to your knowledge base. How can I assist you today?',
-    }
+      content:
+        'I am connected to your knowledge base. Ask me anything about your documents.',
+    },
   ])
+
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // ==========================
+  // SEND MESSAGE (RAG CALL)
+  // ==========================
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!input.trim() || isLoading) return
 
+    setError(null)
+
+    // User message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -41,90 +54,132 @@ export default function AssistantPage() {
     }
 
     setMessages(prev => [...prev, userMessage])
+
+    const currentInput = input
     setInput('')
     setIsLoading(true)
 
     try {
+      // ⏱ Timeout protection (IMPORTANT for HF spaces)
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 30000)
+
       const response = await fetch(`${API_URL}/query`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: input }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question: currentInput }),
+        signal: controller.signal,
       })
 
-      if (!response.ok) throw new Error("Backend connection failed")
+      clearTimeout(timeout)
+
+      if (!response.ok) {
+        throw new Error(`Backend error: ${response.status}`)
+      }
 
       const data = await response.json()
 
+      // AI response (safe parsing)
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.answer || "I'm sorry, I couldn't find a matching answer in the loaded files.",
-        confidence: data.confidence, 
-        sources: data.sources,      
+        content:
+          data.answer?.trim() ||
+          "I couldn't find relevant information in your knowledge base.",
+        confidence: data.confidence ?? 0,
+        sources: Array.isArray(data.sources)
+          ? data.sources.map((s: any) =>
+              typeof s === 'string' ? s : JSON.stringify(s)
+            )
+          : [],
       }
-      
+
       setMessages(prev => [...prev, aiResponse])
-    } catch (err) {
+    } catch (err: any) {
+      console.error("RAG ERROR:", err)
+
+      setError("AI service temporarily unavailable")
+
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "System Error: Connection to AI Engine lost. Please check if your Hugging Face Space is running.",
+        content:
+          err.name === 'AbortError'
+            ? "Request timed out. Your AI server is slow or sleeping."
+            : "System Error: Unable to connect to AI engine. Please try again.",
       }
+
       setMessages(prev => [...prev, errorMsg])
     } finally {
       setIsLoading(false)
     }
   }
 
+  // ==========================
+  // UI
+  // ==========================
   return (
     <DashboardLayout>
       <div className="flex flex-col h-[calc(100vh-140px)] max-w-5xl mx-auto p-4">
-        
-        {/* HEADER: Fixes the unreadable white text issue */}
-        <div className="mb-10 text-center animate-in fade-in slide-in-from-top-4 duration-700">
-          <h2 className="dashboard-text lime-glow text-4xl font-black tracking-tighter mb-2">
+
+        {/* HEADER */}
+        <div className="mb-10 text-center">
+          <h2 className="text-4xl font-black text-[#f1f5f9] tracking-tight">
             AMZRAG ASSISTANT
           </h2>
-          <p className="text-slate-500 text-xs uppercase tracking-[0.2em] font-bold">
-            Agentic AI Service <span className="text-[#9ef01a]">Online</span>
+          <p className="text-slate-500 text-xs uppercase tracking-widest mt-2">
+            AI Knowledge Engine <span className="text-[#9ef01a]">Active</span>
           </p>
         </div>
-        
-        {/* Chat Messages Area */}
-        <div className="flex-1 overflow-y-auto mb-6 pr-2 space-y-6 scrollbar-thin scrollbar-thumb-[#9ef01a]/20">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div 
-                className={`max-w-[85%] rounded-2xl p-5 shadow-2xl transition-all duration-500 ${
-                  msg.role === 'user' 
-                    ? 'bg-[#9ef01a] text-[#0a1a00] font-bold rounded-tr-none border-b-4 border-[#76b900]' 
-                    : 'glass-card border-l-4 border-[#9ef01a] rounded-tl-none'
+
+        {/* ERROR BAR */}
+        {error && (
+          <div className="mb-4 text-red-400 text-xs text-center">
+            {error}
+          </div>
+        )}
+
+        {/* CHAT AREA */}
+        <div className="flex-1 overflow-y-auto space-y-6 mb-6">
+
+          {messages.map(msg => (
+            <div
+              key={msg.id}
+              className={`flex ${
+                msg.role === 'user' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div
+                className={`max-w-[80%] p-4 rounded-2xl ${
+                  msg.role === 'user'
+                    ? 'bg-[#9ef01a] text-black font-semibold'
+                    : 'bg-white/5 text-white border border-white/10'
                 }`}
               >
-                {/* Confidence Badge */}
-                {msg.role === 'assistant' && msg.confidence && (
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] font-black bg-[#9ef01a]/10 text-[#9ef01a] px-2 py-1 rounded border border-[#9ef01a]/20 uppercase tracking-widest">
-                      {Math.round(msg.confidence * 100)}% Match
-                    </span>
+
+                {/* Confidence */}
+                {msg.role === 'assistant' && msg.confidence ? (
+                  <div className="text-[10px] text-[#9ef01a] mb-2">
+                    Match: {Math.round(msg.confidence * 100)}%
                   </div>
-                )}
-                
-                {/* Message Content with Readable Text Fix */}
-                <p className={`text-sm leading-relaxed ${
-                  msg.role === 'user' 
-                    ? 'text-[#0a1a00]' 
-                    : 'readable-text font-medium'
-                }`}>
+                ) : null}
+
+                {/* Message */}
+                <p className="text-sm leading-relaxed">
                   {msg.content}
                 </p>
 
-                {/* Sources chips */}
+                {/* Sources */}
                 {msg.sources && msg.sources.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap gap-2">
-                    {msg.sources.map(s => (
-                      <span key={s} className="text-[9px] bg-white/5 px-2 py-1 rounded text-[#9ef01a] font-bold uppercase border border-white/5">
-                        {s}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {msg.sources.map((s, i) => (
+                      <span
+                        key={i}
+                        className="text-[10px] px-2 py-1 bg-white/10 rounded text-[#9ef01a]"
+                      >
+                        {s.slice(0, 40)}...
                       </span>
                     ))}
                   </div>
@@ -133,35 +188,36 @@ export default function AssistantPage() {
             </div>
           ))}
 
+          {/* LOADING STATE */}
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="glass-card p-4 rounded-xl text-[#9ef01a] text-xs flex items-center gap-3 border-[#9ef01a]/30">
-                <div className="w-2 h-2 bg-[#9ef01a] rounded-full animate-ping" />
-                <span className="font-bold uppercase tracking-widest">Consulting Knowledge Base...</span>
-              </div>
+            <div className="text-[#9ef01a] text-xs animate-pulse">
+              Searching knowledge base...
             </div>
           )}
+
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Form: Premium Dark Styling */}
-        <form onSubmit={handleSendMessage} className="relative flex items-center gap-3 bg-[#0d1526] p-2 rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+        {/* INPUT BOX */}
+        <form
+          onSubmit={handleSendMessage}
+          className="flex items-center gap-3 bg-[#0d1526] p-3 rounded-xl border border-white/10"
+        >
           <input
-            type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question about your documents..."
-            className="flex-1 bg-transparent border-none text-[#f1f5f9] px-4 py-3 outline-none placeholder:text-slate-600 font-medium"
+            onChange={e => setInput(e.target.value)}
+            placeholder="Ask anything from your dataset..."
+            className="flex-1 bg-transparent text-white outline-none placeholder:text-slate-600"
           />
-          
-          <button 
-            type="submit"
+
+          <button
             disabled={isLoading}
-            className="bg-[#9ef01a] hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(158,240,26,0.3)] transition-all px-8 py-3 rounded-xl text-[#0a1a00] font-black text-sm uppercase tracking-tighter disabled:opacity-50"
+            className="bg-[#9ef01a] text-black px-6 py-2 rounded-lg font-bold disabled:opacity-50"
           >
-            {isLoading ? '...' : 'Search'}
+            {isLoading ? '...' : 'Send'}
           </button>
         </form>
+
       </div>
     </DashboardLayout>
   )
