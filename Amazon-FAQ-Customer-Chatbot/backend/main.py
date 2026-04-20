@@ -6,70 +6,75 @@ from rag_pipeline import AmazonRAG
 
 app = FastAPI()
 
-# 1. Enable CORS for your Next.js frontend
+# 1. PROFESSIONAL CORS SETUP
+# Note: When allow_credentials=True, allow_origins cannot be ["*"]
+# Replace the Vercel URL with your actual project URL once deployed
+origins = [
+    "http://localhost:3000", 
+    "https://your-app-name.vercel.app" 
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, replace with your Vercel URL
+    allow_origins=origins if os.getenv("PROD") else ["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 2. Initialize the Engine ONCE
-# This loads the model into memory and scans the /dataset folder on boot
+# 2. INITIALIZE AI ENGINE
+# This loads the SentenceTransformer into memory once.
 engine = AmazonRAG()
+
+@app.get("/")
+async def health_check():
+    return {"status": "online", "engine": "ready"}
 
 @app.post("/query")
 async def query_bot(request: dict):
-    # Validation
+    """Handles chat queries from the Next.js frontend."""
     question = request.get("question")
     if not question or not question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
     try:
-        # Execution
+        # engine.search returns {'answer': str, 'sources': list}
         output = engine.search(question)
-
-        # Return exact keys for Next.js: 'answer' and 'sources'
         return {
             "answer": output["answer"],
             "confidence": 0.95, 
             "sources": output["sources"] 
         }
-
     except Exception as e:
-        print(f"❌ CRITICAL SEARCH ERROR: {str(e)}")
-        raise HTTPException(
-            status_code=500, 
-            detail="The AI Engine encountered an error processing your request."
-        )
+        print(f"❌ SEARCH ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail="AI processing error")
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
+    """Saves file to disk and immediately updates the AI's brain."""
     try:
-        # Ensure directory exists
         os.makedirs("dataset", exist_ok=True)
-        
         file_path = os.path.join("dataset", file.filename)
         
-        # Save file to disk
+        # Save via streaming to handle larger PDFs safely
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # CRITICAL: Re-read the folder so the AI learns the new file immediately
+        # Force the engine to re-index the folder including the new file
         engine.load_dataset()
         
         return {"status": "success", "filename": file.filename}
-    
     except Exception as e:
         print(f"❌ UPLOAD ERROR: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to save file.")
 
 @app.get("/list-files")
 async def list_files():
-    """Returns real-time data for the Knowledge Base table."""
+    """Provides the data for the Knowledge Base table in the UI."""
     files = []
     if os.path.exists("dataset"):
         for filename in os.listdir("dataset"):
+            # Ignore hidden files like .gitkeep
             if filename.endswith(('.pdf', '.csv')):
                 path = os.path.join("dataset", filename)
                 stats = os.stat(path)
@@ -83,10 +88,12 @@ async def list_files():
 
 @app.delete("/delete-file/{filename}")
 async def delete_file(filename: str):
-    """Removes file from disk and triggers AI to forget it."""
+    """Removes file and forces AI to 'forget' the data."""
     file_path = os.path.join("dataset", filename)
     if os.path.exists(file_path):
         os.remove(file_path)
-        engine.load_dataset() # Trigger re-index
+        # Re-build the index without the deleted file
+        engine.load_dataset() 
         return {"message": "Deleted successfully"}
+    
     raise HTTPException(status_code=404, detail="File not found")
