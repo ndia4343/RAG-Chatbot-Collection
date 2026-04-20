@@ -17,7 +17,7 @@ class AmazonRAG:
         self.documents = []
 
         # Dataset folder
-        self.dataset_path = "dataset"
+        self.dataset_path = "/data/dataset"
 
         # Load dataset at startup
         self.load_dataset()
