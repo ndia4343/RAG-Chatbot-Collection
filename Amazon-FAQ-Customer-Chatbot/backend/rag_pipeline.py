@@ -7,6 +7,7 @@ from sentence_transformers import SentenceTransformer
 from pypdf import PdfReader
 import requests
 
+
 class AmazonRAG:
     def __init__(self):
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -46,7 +47,7 @@ class AmazonRAG:
             faiss.write_index(self.index, self.index_path)
 
     # -------------------------
-    # TEXT CHUNKING (IMPORTANT FIX)
+    # TEXT CHUNKING (SAAS FIX)
     # -------------------------
     def chunk_text(self, text, chunk_size=400, overlap=80):
         words = text.split()
@@ -54,12 +55,13 @@ class AmazonRAG:
 
         for i in range(0, len(words), chunk_size - overlap):
             chunk = " ".join(words[i:i + chunk_size])
-            chunks.append(chunk)
+            if chunk.strip():
+                chunks.append(chunk)
 
         return chunks
 
     # -------------------------
-    # ADD FILE
+    # ADD FILE (FIXED FOR SaaS PIPELINE)
     # -------------------------
     def add_file(self, path):
         new_docs = []
@@ -86,13 +88,17 @@ class AmazonRAG:
         self.save_all()
 
     # -------------------------
-    # BUILD INDEX (SAFE)
+    # BUILD INDEX (SAFE + FAST)
     # -------------------------
     def rebuild_index(self):
         if not self.documents:
             return
 
-        embeddings = self.model.encode(self.documents, show_progress_bar=False)
+        embeddings = self.model.encode(
+            self.documents,
+            show_progress_bar=False
+        )
+
         embeddings = np.array(embeddings).astype("float32")
 
         dim = embeddings.shape[1]
@@ -101,7 +107,7 @@ class AmazonRAG:
         self.index.add(embeddings)
 
     # -------------------------
-    # SEARCH
+    # SEARCH (FIXED CONFIDENCE)
     # -------------------------
     def search(self, query, top_k=3):
         if not self.index or not self.documents:
@@ -115,13 +121,18 @@ class AmazonRAG:
 
         dist, idx = self.index.search(q_emb, top_k)
 
-        results = [self.documents[i] for i in idx[0] if i != -1]
+        results = [
+            self.documents[i]
+            for i in idx[0]
+            if i != -1
+        ]
 
         context = "\n".join(results)
 
         answer = self.generate_answer(query, context)
 
-        confidence = float(max(0.0, 1 - dist[0][0] / 2))
+        # FIXED confidence (REALISTIC SCORING)
+        confidence = float(max(0.0, min(1.0, 1 / (1 + dist[0][0]))))
 
         return {
             "answer": answer,
@@ -130,7 +141,7 @@ class AmazonRAG:
         }
 
     # -------------------------
-    # SAFE LLM CALL
+    # LLM CALL (SAFE + STABLE)
     # -------------------------
     def generate_answer(self, question, context):
         API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
@@ -140,9 +151,11 @@ class AmazonRAG:
         }
 
         prompt = f"""
-You are an Amazon support AI.
+You are an Amazon support AI assistant.
 
-Use ONLY the context below.
+RULES:
+- Use ONLY the context
+- If answer not found, say "I don't know"
 
 Context:
 {context}
@@ -150,7 +163,7 @@ Context:
 Question:
 {question}
 
-Answer clearly and concisely:
+Answer:
 """
 
         payload = {
