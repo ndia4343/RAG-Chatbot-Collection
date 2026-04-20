@@ -7,21 +7,26 @@ from pypdf import PdfReader
 
 class AmazonRAG:
     def __init__(self):
-        # Professional standard: all-MiniLM-L6-v2 is fast and efficient for HF Spaces
+        """Initializes the AI model once so it stays in memory."""
+        print("🤖 Loading SentenceTransformer model...")
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
         self.index = None
         self.data = None
+        # Load whatever is in the folder immediately on startup
+        self.load_dataset()
 
     def find_dataset(self):
-        """Strictly finds files in the production dataset folder."""
-        # Focuses only on the dataset directory for client privacy
+        """Finds all valid files in the dataset directory."""
+        # Ensure directory exists
+        if not os.path.exists("dataset"):
+            os.makedirs("dataset")
+            
         files = glob.glob("dataset/*.csv") + glob.glob("dataset/*.pdf")
         return files
 
     def load_dataset(self):
         """AGGREGATOR: Merges all files in /dataset into one unified brain."""
         file_paths = self.find_dataset()
-        
         all_texts = []
         all_metadata = []
 
@@ -38,14 +43,13 @@ class AmazonRAG:
             if path.endswith('.csv'):
                 try:
                     df = pd.read_csv(path)
-                    # Robust column detection
                     q_col = next((c for c in df.columns if 'question' in c.lower()), df.columns[0])
                     a_col = next((c for c in df.columns if 'answer' in c.lower()), df.columns[-1])
                     
                     for _, row in df.iterrows():
                         all_texts.append(f"{row[q_col]} {row[a_col]}")
                         all_metadata.append({
-                            "title": f"{file_name}", # Simple filename for the badge
+                            "title": f"{file_name}", 
                             "answer": str(row[a_col])
                         })
                 except Exception as e:
@@ -67,7 +71,7 @@ class AmazonRAG:
                 except Exception as e:
                     print(f"❌ Error loading PDF {file_name}: {e}")
 
-        # Finalize the Index
+        # Finalize the FAISS Index
         if all_texts:
             self.data = pd.DataFrame(all_metadata)
             embeddings = self.model.encode(all_texts, convert_to_numpy=True)
@@ -79,11 +83,10 @@ class AmazonRAG:
             print(f"✅ BRAIN READY: {len(all_texts)} chunks from {len(file_paths)} files.")
 
     def search(self, query, top_k=3):
-        """Unified search that returns Answer + Unique Source Objects."""
+        """Returns the best answer and unique source names."""
         if self.index is None or self.data is None or self.data.empty:
-            return {"answer": "Knowledge base is empty. Please upload files.", "sources": []}
+            return {"answer": "I have no knowledge base loaded.", "sources": []}
 
-        # 1. Vector Search
         query_vec = self.model.encode([query], convert_to_numpy=True)
         faiss.normalize_L2(query_vec)
         scores, indices = self.index.search(query_vec, top_k)
@@ -100,18 +103,13 @@ class AmazonRAG:
                 row = self.data.iloc[idx]
                 valid_answers.append(row["answer"])
                 
-                # Deduplicate sources so the UI doesn't show the same file 3 times
                 source_name = row["title"]
                 if source_name not in sources_seen:
                     sources_list.append({"name": source_name})
                     sources_seen.add(source_name)
 
-        # 2. Logic for No Match
         if not valid_answers:
-            return {
-                "answer": "I couldn't find a definitive answer in your documentation.",
-                "sources": []
-            }
+            return {"answer": "I couldn't find a definitive answer in the documents.", "sources": []}
             
         return {
             "answer": valid_answers[0], 
