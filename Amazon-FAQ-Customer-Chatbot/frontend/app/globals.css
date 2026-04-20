@@ -6,36 +6,31 @@
   --brand: #9ef01a;
   --brand-glow: rgba(158, 240, 26, 0.35);
   
-  /* DARK THEME */
-  --bg-dark: #0a0f1a;
-  --card-dark: rgba(17, 24, 39, 0.7);
-  --sidebar-dark: #0d1526;
-  --border-dark: rgba(255, 255, 255, 0.05);
-  --text-dark: #f1f5f9;
+  /* DARK THEME (Default) */
+  --bg-main: #020617; /* Deep Slate Black for that high-end feel */
+  --card-bg: rgba(17, 24, 39, 0.7);
+  --sidebar-bg: #0d1526;
+  --border-main: rgba(255, 255, 255, 0.08);
+  --text-main: #f1f5f9; /* Creamy White */
+  --text-secondary: #94a3b8;
+  --accent-lime: #bef264;
+}
 
-  /* LIGHT THEME */
-  --bg-light: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #e0e7ff 100%);
-  --card-light: rgba(255, 255, 255, 0.8);
-  --text-light: #1e293b;
-  --border-light: rgba(99, 102, 241, 0.1);
+/* LIGHT THEME */
+.light {
+  --bg-main: #f8fafc;
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --border-main: rgba(99, 102, 241, 0.1);
 }
 
 @layer base {
   body {
     @apply antialiased transition-colors duration-500;
-    background-color: var(--bg-dark);
+    background-color: var(--bg-main);
+    color: var(--text-main);
     background-attachment: fixed;
-    color: var(--text-dark);
-  }
-
-  /* RUTHLESS FIX: 
-     If class "light" is on the <html> tag, use this. 
-     Note: Gradients don't transition; 'background-color' does.
-  */
-  .light body {
-    background: var(--bg-light);
-    background-attachment: fixed;
-    color: var(--text-light);
   }
 }
 
@@ -43,15 +38,28 @@
   /* Combined Glass-Card & Settings-Card Logic */
   .settings-card, .glass-card {
     @apply border transition-all duration-300 rounded-2xl p-6 backdrop-blur-xl;
-    background-color: var(--card-dark);
-    border-color: var(--border-dark);
+    background-color: var(--card-bg);
+    border-color: var(--border-main);
   }
 
-  .light .settings-card, .light .glass-card {
-    background-color: var(--card-light);
-    border-color: var(--border-light);
-    @apply shadow-xl shadow-indigo-100/50;
-    color: var(--text-light);
+  /* TEXT UTILITIES */
+  .dashboard-text {
+    color: var(--text-main);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .accent-text {
+    color: var(--accent-lime);
+  }
+
+  .lime-glow {
+    color: var(--accent-lime);
+    text-shadow: 0 0 15px rgba(190, 242, 100, 0.4);
+  }
+
+  .readable-text {
+    color: var(--text-main) !important;
+    opacity: 1 !important;
   }
 
   /* Slider Logic */
@@ -63,23 +71,4 @@
   .logo-glow {
     box-shadow: 0 0 20px var(--brand-glow);
   }
-}
-/* Add these at the very end of globals.css */
-
-.dashboard-text {
-  /* Using a softer off-white for better eye comfort on dark backgrounds */
-  color: #f1f5f9; 
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.accent-text {
-  /* This is the Lime Green from your logo to keep things consistent */
-  color: #bef264; 
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
 }
