@@ -2,59 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
+/* -----------------------------
+   DESIGN TOKENS (DARK DEFAULT)
+------------------------------ */
 :root {
   --brand: #9ef01a;
-  --brand-glow: rgba(158, 240, 26, 0.35);
-  
-  /* DARK THEME (Default) */
-  --bg-main: #020617; /* Deep Slate Black for that high-end feel */
+
+  --bg-main: #020617;
   --card-bg: rgba(17, 24, 39, 0.7);
   --sidebar-bg: #0d1526;
+
   --border-main: rgba(255, 255, 255, 0.08);
-  --text-main: #f1f5f9; /* Creamy White */
+
+  --text-main: #f1f5f9;
   --text-secondary: #94a3b8;
-  --accent-lime: #bef264;
+
+  /* SaaS Semantic Colors */
+  --success: #22c55e;
+  --warning: #eab308;
+  --danger: #ef4444;
+  --info: #38bdf8;
+
+  /* Glow */
+  --brand-glow: rgba(158, 240, 26, 0.35);
 }
 
-/* LIGHT THEME */
+/* -----------------------------
+   LIGHT MODE (FIXED)
+------------------------------ */
 .light {
   --bg-main: #f8fafc;
-  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --sidebar-bg: #ffffff;
+
   --text-main: #0f172a;
   --text-secondary: #475569;
-  --border-main: rgba(99, 102, 241, 0.1);
+
+  --border-main: rgba(15, 23, 42, 0.08);
+
+  /* soften brand in light mode */
+  --brand-glow: rgba(158, 240, 26, 0.15);
 }
 
+/* -----------------------------
+   BASE STYLES
+------------------------------ */
 @layer base {
   body {
     @apply antialiased transition-colors duration-500;
     background-color: var(--bg-main);
     color: var(--text-main);
-    background-attachment: fixed;
   }
 }
 
+/* -----------------------------
+   COMPONENT SYSTEM (SAAS UI KIT)
+------------------------------ */
 @layer components {
-  /* Combined Glass-Card & Settings-Card Logic */
-  .settings-card, .glass-card {
-    @apply border transition-all duration-300 rounded-2xl p-6 backdrop-blur-xl;
+
+  .glass-card,
+  .settings-card {
+    @apply border rounded-2xl p-6 backdrop-blur-xl transition-all duration-300;
     background-color: var(--card-bg);
     border-color: var(--border-main);
   }
 
-  /* TEXT UTILITIES */
+  /* TEXT SYSTEM */
   .dashboard-text {
     color: var(--text-main);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .muted-text {
+    color: var(--text-secondary);
   }
 
   .accent-text {
-    color: var(--accent-lime);
+    color: var(--brand);
   }
 
   .lime-glow {
-    color: var(--accent-lime);
-    text-shadow: 0 0 15px rgba(190, 242, 100, 0.4);
+    color: var(--brand);
+    text-shadow: 0 0 18px var(--brand-glow);
   }
 
   .readable-text {
@@ -62,13 +90,25 @@
     opacity: 1 !important;
   }
 
-  /* Slider Logic */
+  /* BUTTON STATES */
+  .btn-success { color: var(--success); }
+  .btn-warning { color: var(--warning); }
+  .btn-danger { color: var(--danger); }
+  .btn-info { color: var(--info); }
+
+  /* RANGE INPUT */
   input[type='range'] {
     @apply accent-[#9ef01a] cursor-pointer;
   }
 
-  /* Logo Glow */
+  /* LOGO */
   .logo-glow {
-    box-shadow: 0 0 20px var(--brand-glow);
+    box-shadow: 0 0 25px var(--brand-glow);
+  }
+
+  /* CARD HOVER (SAAS FEEL) */
+  .glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
   }
 }
