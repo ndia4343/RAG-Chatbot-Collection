@@ -1,42 +1,98 @@
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+import os
+import shutil
 import pandas as pd
-# ... other imports (faiss, sentence_transformers)
+from rag_pipeline import AmazonRAG
 
-class AmazonRAG:
-    def load_dataset(self):
-        all_texts = []
-        dataset_path = "dataset"
+app = FastAPI()
+
+# PROFESSIONAL CORS SETUP
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # For production, replace with your Vercel URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# INITIALIZE AI ENGINE
+engine = AmazonRAG()
+
+@app.get("/")
+async def health_check():
+    return {"status": "online", "engine": "ready"}
+
+@app.post("/query")
+async def query_bot(request: dict):
+    question = request.get("question")
+    if not question or not question.strip():
+        raise HTTPException(status_code=400, detail="Question cannot be empty")
+
+    try:
+        # Pass the question to the pipeline
+        output = engine.search(question)
         
-        if not os.path.exists(dataset_path) or not os.listdir(dataset_path):
-            self.documents = []
-            self.index = None
-            return
+        # If the pipeline returns a confidence score, use it; otherwise, default to 0.95
+        return {
+            "answer": output.get("answer", "I'm sorry, I couldn't find a relevant answer."),
+            "confidence": output.get("confidence", 0.95), 
+            "sources": output.get("sources", [])
+        }
+    except Exception as e:
+        print(f"❌ SEARCH ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail="AI processing error")
 
-        for filename in os.listdir(dataset_path):
-            file_path = os.path.join(dataset_path, filename)
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        os.makedirs("dataset", exist_ok=True)
+        file_path = os.path.join("dataset", file.filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # --- NEW LOGIC: PRE-VALIDATION OF CSV COLUMNS ---
+        if file.filename.endswith('.csv'):
+            df = pd.read_csv(file_path)
+            # Check for common text columns
+            text_columns = ['question', 'text', 'content', 'description', 'Query', 'Answer']
+            target_col = next((col for col in df.columns if col in text_columns), None)
             
-            # --- CSV LOGIC ---
-            if filename.endswith('.csv'):
-                df = pd.read_csv(file_path)
-                
-                # THE FIX: Check for common text columns
-                text_columns = ['question', 'text', 'content', 'description', 'Query', 'Answer', 'product_name']
-                # Find the first column that matches our list, or default to the first column in the file
-                target_col = next((col for col in df.columns if col in text_columns), df.columns[0])
-                
-                print(f"✅ Mapping column '{target_col}' from {filename}")
-                all_texts.extend(df[target_col].astype(str).tolist())
+            if not target_col:
+                print(f"⚠️ Warning: No standard text column found in {file.filename}. Using first column: {df.columns[0]}")
+        # -----------------------------------------------
 
-            # --- PDF LOGIC ---
-            elif filename.endswith('.pdf'):
-                # (Ensure pypdf is used here to extract text and append to all_texts)
-                pass
-
-        self.documents = all_texts
+        # Force the engine to re-index
+        engine.load_dataset()
         
-        # CRITICAL: If no text was found, don't try to index
-        if not self.documents:
-            print("⚠️ No text content found to index.")
-            return
+        return {"status": "success", "filename": file.filename}
+    except Exception as e:
+        print(f"❌ UPLOAD ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process {file.filename}")
 
-        # Rebuild FAISS index
-        self.rebuild_index()
+@app.get("/list-files")
+async def list_files():
+    files = []
+    if os.path.exists("dataset"):
+        for filename in os.listdir("dataset"):
+            if filename.endswith(('.pdf', '.csv')):
+                path = os.path.join("dataset", filename)
+                stats = os.stat(path)
+                files.append({
+                    "name": filename,
+                    "type": "pdf" if filename.endswith(".pdf") else "csv",
+                    "size": f"{round(stats.st_size / 1024, 1)} KB",
+                    "lastSync": "Synced"
+                })
+    return files
+
+@app.delete("/delete-file/{filename}")
+async def delete_file(filename: str):
+    file_path = os.path.join("dataset", filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        engine.load_dataset() 
+        return {"message": "Deleted successfully"}
+    
+    raise HTTPException(status_code=404, detail="File not found")
