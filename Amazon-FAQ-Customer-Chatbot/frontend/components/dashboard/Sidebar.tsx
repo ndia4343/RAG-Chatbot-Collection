@@ -14,7 +14,8 @@ import {
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 const navigation = [
-  { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
+  // CORRECTED: Pointing to /dashboard instead of /
+  { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' }, 
   { name: 'FAQ Search', icon: MessageSquare, href: '/assistant' },
   { name: 'Knowledge Base', icon: Database, href: '/knowledge' },
   { name: 'Query Logs', icon: FileText, href: '/logs' },
@@ -62,18 +63,21 @@ export default function Sidebar() {
       {/* BOTTOM SECTION */}
       <div className="p-4 border-t border-white/5 space-y-4">
         <div className="flex items-center justify-between px-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">System Theme</span>
+          {/* IMPROVED: Better visibility for Light Mode label */}
+          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 light:text-slate-700">
+            System Theme
+          </span>
           <ThemeToggle />
         </div>
         
-        {/* BOT PROFILE */}
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#1e293b]/40 light:bg-slate-100 border border-white/5 light:border-slate-200">
+        {/* BOT PROFILE: Adjusted colors for premium Light Mode visibility */}
+        <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#1e293b]/40 light:bg-slate-200/50 border border-white/5 light:border-slate-300 transition-colors">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#9ef01a] to-[#7acc00] flex items-center justify-center text-[#0a1a00] font-bold text-sm shadow-lg">
             AR
           </div>
           <div className="overflow-hidden">
-            <p className="text-xs font-bold text-white light:text-[#0d1526] truncate">AmzRAG Assistant</p>
-            <p className="text-[10px] text-[#9ef01a]/80 font-medium uppercase tracking-widest">AI Service Online</p>
+            <p className="text-xs font-bold text-white light:text-slate-900 truncate">AmzRAG Assistant</p>
+            <p className="text-[10px] text-[#9ef01a]/80 light:text-[#4d7c0f] font-bold uppercase tracking-widest">AI Service Online</p>
           </div>
         </div>
       </div>
