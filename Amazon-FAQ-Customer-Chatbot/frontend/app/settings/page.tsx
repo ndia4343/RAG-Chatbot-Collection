@@ -121,7 +121,9 @@ export default function SettingsPage() {
             min={0}
             max={1}
             step={0.1}
-            onChange={(v) => setSettings({ ...settings, temperature: v })}
+            onChange={(v: number) =>
+             setSettings({ ...settings, temperature: v })
+           }
           />
 
           <Slider
