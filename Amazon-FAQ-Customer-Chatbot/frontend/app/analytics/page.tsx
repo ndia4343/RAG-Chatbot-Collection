@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { MetricGrid } from '@/components/dashboard/MetricCard'
+import { API_URL } from '@/lib/config'
 
 export default function AnalyticsPage() {
   // 1. Live State Management
@@ -12,7 +13,7 @@ export default function AnalyticsPage() {
   // 2. Fetch data from your FastAPI backend
   useEffect(() => {
     // Note: When deploying to Hugging Face, replace this URL with your Space URL
-    fetch('http://localhost:8000/api/stats')
+    fetch(`${API_URL}/api/stats`)
       .then(res => res.json())
       .then(data => {
         setLiveData(data)
