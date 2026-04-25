@@ -1,4 +1,4 @@
-# 📌 Amazon RAG Chatbot (AI-Powered FAQ Assistant)
+# 📌 AmgRAG Chatbot (AI-Powered FAQ Assistant)
 
 A Retrieval-Augmented Generation (RAG) AI Chatbot built with FastAPI, FAISS, Sentence Transformers, and Next.js.
 It answers Amazon-related queries using a custom knowledge base with semantic search + AI retrieval system.
