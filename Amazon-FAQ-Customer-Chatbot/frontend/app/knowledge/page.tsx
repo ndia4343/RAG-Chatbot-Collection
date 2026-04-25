@@ -18,6 +18,9 @@ export default function KnowledgeBasePanel() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Allowed file extensions
+  const allowed = ['pdf', 'txt', 'docx', 'csv', 'md']
+
   // -----------------------------
   // FETCH FILES
   // -----------------------------
@@ -31,6 +34,7 @@ export default function KnowledgeBasePanel() {
       const data = await res.json()
       setFiles(data || [])
     } catch (err) {
+      console.error(err)
       setError('Failed to load knowledge base')
     } finally {
       setLoading(false)
@@ -48,6 +52,21 @@ export default function KnowledgeBasePanel() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // 🔹 File Extension Validation
+    const ext = file.name.split('.').pop()?.toLowerCase()
+
+    if (!ext || !allowed.includes(ext)) {
+      alert('Invalid file type.\nAllowed: PDF, TXT, DOCX, CSV, MD')
+      return
+    }
+
+    // 🔹 File Size Validation (5MB example)
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      alert('File too large. Max size is 5MB')
+      return
+    }
+
     const formData = new FormData()
     formData.append('file', file)
 
@@ -62,7 +81,11 @@ export default function KnowledgeBasePanel() {
       if (!res.ok) throw new Error('Upload failed')
 
       await fetchFiles()
+
+      // reset input
+      e.target.value = ''
     } catch (err) {
+      console.error(err)
       alert('Upload failed. Please check backend.')
     } finally {
       setUploading(false)
@@ -85,6 +108,7 @@ export default function KnowledgeBasePanel() {
 
       setFiles((prev) => prev.filter((f) => f.name !== name))
     } catch (err) {
+      console.error(err)
       alert('Delete failed. Backend error.')
     }
   }
@@ -119,7 +143,13 @@ export default function KnowledgeBasePanel() {
 
         <label className="bg-[#9ef01a] text-black px-4 py-2 rounded-lg font-bold cursor-pointer hover:scale-105 transition">
           {uploading ? 'Uploading...' : 'Upload'}
-          <input type="file" hidden onChange={handleUpload} />
+
+          <input
+            type="file"
+            hidden
+            accept=".pdf,.txt,.docx,.csv,.md"
+            onChange={handleUpload}
+          />
         </label>
       </div>
 
