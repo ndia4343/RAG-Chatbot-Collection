@@ -6,6 +6,10 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   'https://aikahan-amazon-rag-bot.hf.space'
 
+// ✅ Move OUTSIDE component (performance optimization)
+const ALLOWED_FILES = ['pdf', 'txt', 'docx', 'csv', 'md']
+const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+
 interface FileItem {
   name: string
   size: string
@@ -17,9 +21,6 @@ export default function KnowledgeBasePanel() {
   const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  // Allowed file extensions
-  const allowed = ['pdf', 'txt', 'docx', 'csv', 'md']
 
   // -----------------------------
   // FETCH FILES
@@ -52,20 +53,21 @@ export default function KnowledgeBasePanel() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 🔹 File Extension Validation
     const ext = file.name.split('.').pop()?.toLowerCase()
 
-    if (!ext || !allowed.includes(ext)) {
-      alert('Invalid file type.\nAllowed: PDF, TXT, DOCX, CSV, MD')
+    // ❌ File type validation
+    if (!ext || !ALLOWED_FILES.includes(ext)) {
+      alert('Invalid file type. Allowed: PDF, TXT, DOCX, CSV, MD')
       return
     }
 
-    // 🔹 File Size Validation (5MB example)
-    const maxSize = 5 * 1024 * 1024
-    if (file.size > maxSize) {
+    // ❌ File size validation
+    if (file.size > MAX_SIZE) {
       alert('File too large. Max size is 5MB')
       return
     }
+
+    if (uploading) return // prevent spam upload
 
     const formData = new FormData()
     formData.append('file', file)
@@ -81,8 +83,6 @@ export default function KnowledgeBasePanel() {
       if (!res.ok) throw new Error('Upload failed')
 
       await fetchFiles()
-
-      // reset input
       e.target.value = ''
     } catch (err) {
       console.error(err)
