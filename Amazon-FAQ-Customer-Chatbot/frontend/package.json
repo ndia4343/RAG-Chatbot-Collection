@@ -12,7 +12,8 @@
     "react": "^18",
     "react-dom": "^18",
     "next-themes": "latest",
-    "lucide-react": "latest"
+    "lucide-react": "latest",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@types/node": "^20",
