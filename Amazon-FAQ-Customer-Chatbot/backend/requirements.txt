@@ -1,19 +1,21 @@
-fastapi==0.109.0
-uvicorn==0.27.0
-python-multipart==0.0.6
+fastapi
+uvicorn
 
-sentence-transformers==2.2.2
-pandas==2.2.0
-numpy==1.26.3
+numpy
+pandas
+
+torch
+transformers
+sentence-transformers
+
 faiss-cpu==1.7.4
-scikit-learn==1.4.0
 
-pydantic==2.5.3
-pydantic-settings==2.1.0
+sqlalchemy
+psycopg2-binary
 
-requests==2.31.0
+pypdf
+python-multipart
 
-sqlalchemy==2.0.25
-psycopg2-binary==2.9.9
-pypdf==4.0.1
-huggingface_hub==0.20.3
+requests
+
+huggingface_hub>=0.24.0
