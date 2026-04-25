@@ -15,8 +15,8 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-dark-bg text-white">
 
-      {/* Sidebar */}
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+      {/* Sidebar (FIXED: NO PROPS) */}
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 min-w-0">
@@ -24,10 +24,8 @@ export default function DashboardLayout({
         {/* Header */}
         <header className="flex items-center justify-between px-6 py-4 border-b border-dark-border bg-dark-secondary sticky top-0 z-40">
 
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden"
-          >
+          {/* Mobile menu button (kept for UI, but no sidebar toggle logic anymore) */}
+          <button className="lg:hidden">
             <Menu className="w-6 h-6 text-brand" />
           </button>
 
