@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
-import KnowledgeBasePanel from '@/components/KnowledgeBasePanel'
+import KnowledgeBasePanel from '@/app/knowledge/page'
 import { API_URL } from '@/lib/config'
 
 export default function DashboardPage() {
