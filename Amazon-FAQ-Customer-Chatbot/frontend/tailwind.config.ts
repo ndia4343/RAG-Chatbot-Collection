@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
 const config: Config = {
   content: [
@@ -6,34 +7,45 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  darkMode: "class", // Crucial for the theme toggle to work
+
+  darkMode: "class",
+
   theme: {
     extend: {
       colors: {
-        // The core neon green from your mockup
         brand: {
-          DEFAULT: "#9ef01a", // Electric Lime
-          hover: "#ccff33",   // Lighter shade for hover states
-          dark: "#7acc00",    // Slightly deeper for gradients
+          DEFAULT: "#9ef01a",
+          hover: "#ccff33",
+          dark: "#7acc00",
         },
-        // Dark Mode Colors
+
         dark: {
-          bg: "#0a0f1a",        // Main background
-          secondary: "#0d1526", // Sidebar background
-          card: "rgba(30, 41, 59, 0.4)", // Translucent card
-          border: "rgba(158, 240, 26, 0.12)", // Subtle neon border
+          bg: "#0a0f1a",
+          secondary: "#0d1526",
+          card: "rgba(30, 41, 59, 0.4)",
+          border: "rgba(158, 240, 26, 0.12)",
         },
-        // Light Mode Colors
+
         light: {
-          bg: "#ffffff",        // Pure white background
-          secondary: "#f8fafc", // Soft slate for sidebars/sections
-          text: "#1e293b",      // Deep navy text
-          border: "#e2e8f0",    // Standard light border
-        }
+          bg: "#ffffff",
+          secondary: "#f8fafc",
+          text: "#1e293b",
+          border: "#e2e8f0",
+        },
+      },
+
+      borderRadius: {
+        xl: "0.75rem",
+        "2xl": "1rem",
+      },
+
+      boxShadow: {
+        neon: "0 0 12px rgba(158,240,26,0.4)",
       },
     },
   },
-  plugins: [],
+
+  plugins: [animate],
 };
 
 export default config;
