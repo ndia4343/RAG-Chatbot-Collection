@@ -18,14 +18,26 @@ interface SettingsState {
   slackIntegration: boolean
 }
 
+type SliderProps = {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  onChange: (v: number) => void
+}
+
+type ToggleProps = {
+  label: string
+  value: boolean
+  onChange: (v: boolean) => void
+}
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<SettingsState | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  // -----------------------------
-  // LOAD SETTINGS FROM BACKEND
-  // -----------------------------
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -42,9 +54,6 @@ export default function SettingsPage() {
     fetchSettings()
   }, [])
 
-  // -----------------------------
-  // SAVE SETTINGS TO BACKEND
-  // -----------------------------
   const saveSettings = async () => {
     if (!settings) return
 
@@ -60,16 +69,13 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error('Save failed')
 
       alert('Settings saved successfully 🚀')
-    } catch (err) {
+    } catch {
       alert('Failed to save settings')
     } finally {
       setSaving(false)
     }
   }
 
-  // -----------------------------
-  // LOADING STATE
-  // -----------------------------
   if (loading || !settings) {
     return (
       <DashboardLayout>
@@ -80,9 +86,6 @@ export default function SettingsPage() {
     )
   }
 
-  // -----------------------------
-  // UI
-  // -----------------------------
   return (
     <DashboardLayout>
       <div className="mb-6">
@@ -121,9 +124,9 @@ export default function SettingsPage() {
             min={0}
             max={1}
             step={0.1}
-            onChange={(v: number) =>
-             setSettings({ ...settings, temperature: v })
-           }
+            onChange={(v) =>
+              setSettings({ ...settings, temperature: v })
+            }
           />
 
           <Slider
@@ -132,7 +135,9 @@ export default function SettingsPage() {
             min={100}
             max={2000}
             step={100}
-            onChange={(v) => setSettings({ ...settings, maxTokens: v })}
+            onChange={(v) =>
+              setSettings({ ...settings, maxTokens: v })
+            }
           />
 
           <Slider
@@ -141,7 +146,9 @@ export default function SettingsPage() {
             min={1}
             max={10}
             step={1}
-            onChange={(v) => setSettings({ ...settings, topK: v })}
+            onChange={(v) =>
+              setSettings({ ...settings, topK: v })
+            }
           />
 
           <Slider
@@ -150,7 +157,9 @@ export default function SettingsPage() {
             min={0}
             max={1}
             step={0.1}
-            onChange={(v) => setSettings({ ...settings, confidence: v })}
+            onChange={(v) =>
+              setSettings({ ...settings, confidence: v })
+            }
           />
         </div>
 
@@ -182,7 +191,7 @@ export default function SettingsPage() {
           />
         </div>
 
-        {/* SAVE BUTTON (REAL SAAS FIX) */}
+        {/* SAVE */}
         <div className="flex justify-end">
           <button
             onClick={saveSettings}
@@ -208,7 +217,7 @@ function Slider({
   max,
   step,
   onChange,
-}: any) {
+}: SliderProps) {
   return (
     <div>
       <div className="flex justify-between text-sm text-slate-300 mb-2">
@@ -229,7 +238,7 @@ function Slider({
   )
 }
 
-function Toggle({ label, value, onChange }: any) {
+function Toggle({ label, value, onChange }: ToggleProps) {
   return (
     <div className="flex justify-between items-center">
       <span className="text-slate-300 text-sm">{label}</span>
