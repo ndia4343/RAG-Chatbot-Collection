@@ -205,3 +205,5 @@ def get_db():
 
 if __name__ == "__main__":
     init_db()
+    # Add this at the very end so tables create on import
+init_db()
