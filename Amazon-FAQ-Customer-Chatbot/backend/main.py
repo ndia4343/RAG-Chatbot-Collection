@@ -5,8 +5,8 @@ from sqlalchemy import func
 import os
 import shutil
 
-from backend.database import SearchLog, Feedback, get_db
-from rag_pipeline import AmazonRAG
+from .database import SearchLog, Feedback, get_db
+from .rag_pipeline import AmazonRAG
 
 # -----------------------------
 # APP INIT
