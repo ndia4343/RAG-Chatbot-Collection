@@ -37,42 +37,45 @@ export default function Modal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.7)' }}
+      style={{ background: 'rgba(15, 23, 42, 0.4)' }}
       onClick={onClose}
     >
 
       <div
-        className="w-full max-w-lg bg-dark-secondary rounded-xl border border-dark-border animate-in fade-in zoom-in duration-200"
+        className="w-full max-w-lg bg-white rounded-xl border border-slate-200 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
 
-        {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-dark-border">
+        {/* HEADER */}
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200">
 
-          <h3 className="text-lg font-semibold">{title}</h3>
+          <h3 className="text-lg font-semibold text-slate-900">
+            {title}
+          </h3>
 
           <button
             onClick={onClose}
-            className="text-brand hover:opacity-70"
+            className="text-sky-500 hover:opacity-70 text-lg"
           >
             ✕
           </button>
 
         </div>
 
-        {/* Body */}
-        <div className="p-6">
+        {/* BODY */}
+        <div className="p-6 text-slate-700">
           {children}
         </div>
 
-        {/* Footer */}
+        {/* FOOTER */}
         {footer && (
-          <div className="px-6 py-4 border-t border-dark-border flex justify-end gap-3">
+          <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
             {footer}
           </div>
         )}
 
       </div>
+
     </div>
   )
 }
