@@ -1,40 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { API_URL } from '@/lib/config'
 
 export default function DashboardPage() {
 
   const [docs, setDocs] = useState(0)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch(`${API_URL}/list-files`)
       .then(r => r.json())
-      .then(d => {
-        setDocs(d.length || 0)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+      .then(d => setDocs(Array.isArray(d) ? d.length : 0))
   }, [])
 
   const cards = [
-    {
-      label: "Documents",
-      value: loading ? "..." : docs,
-    },
-    {
-      label: "System",
-      value: "Online",
-    },
-    {
-      label: "AI Engine",
-      value: "RAG Active",
-    },
-    {
-      label: "Response Time",
-      value: "0.31s",
-    }
+    { label: "Documents", value: docs },
+    { label: "System", value: "Online" },
+    { label: "AI Engine", value: "RAG Active" },
+    { label: "Response Time", value: "0.31s" }
   ]
 
   return (
@@ -49,7 +32,9 @@ export default function DashboardPage() {
         {cards.map((c, i) => (
           <div key={i} className="card">
             <p className="text-muted text-sm">{c.label}</p>
-            <p className="text-xl font-bold text-sky-600">{c.value}</p>
+            <p className="text-xl font-bold text-sky-500">
+              {c.value}
+            </p>
           </div>
         ))}
 
