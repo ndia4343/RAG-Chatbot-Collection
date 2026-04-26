@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { API_URL } from '@/lib/config'
-
+import { API_URL } from '../../lib/config'
 export default function DashboardPage() {
 
   const [docs, setDocs] = useState(0)
