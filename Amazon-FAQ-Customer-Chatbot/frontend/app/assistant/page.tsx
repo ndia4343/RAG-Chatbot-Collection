@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { API_URL } from '@/lib/config'
+import { API_URL } from '../../lib/config'
 
 interface Message {
   id: string
