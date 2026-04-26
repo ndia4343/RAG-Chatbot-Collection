@@ -1,12 +1,19 @@
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "next-themes"
+import './globals.css'
+import type { ReactNode } from 'react'
 
-const inter = Inter({ subsets: ["latin"] })
-
-export const metadata: Metadata = {
-  title: "AmzRAG | AI Assistant",
-  description: "RAG-powered SaaS AI Assistant",
+export const metadata = {
+  title: 'AmzRAG',
+  description: 'AI FAQ Chatbot'
 }
 
+export default function RootLayout({
+  children
+}: {
+  children: ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}
