@@ -6,19 +6,18 @@ import {
   LayoutDashboard,
   MessageSquare,
   Database,
-  Settings,
-  BarChart3,
   FileText,
+  BarChart3,
+  Settings,
   Star
 } from 'lucide-react'
-import { ThemeToggle } from '@/components/ThemeToggle'
 
 const navigation = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-  { name: 'FAQ Search', icon: MessageSquare, href: '/assistant' },
+  { name: 'Assistant', icon: MessageSquare, href: '/assistant' },
   { name: 'Knowledge Base', icon: Database, href: '/knowledge' },
-  { name: 'Query Logs', icon: FileText, href: '/logs' },
-  { name: 'Performance', icon: BarChart3, href: '/analytics' },
+  { name: 'Logs', icon: FileText, href: '/logs' },
+  { name: 'Analytics', icon: BarChart3, href: '/analytics' },
   { name: 'Settings', icon: Settings, href: '/settings' },
 ]
 
@@ -29,21 +28,24 @@ export default function Sidebar() {
     pathname === href || pathname.startsWith(href)
 
   return (
-    <aside className="w-[260px] bg-[#0d1526] border-r border-white/10 flex flex-col h-screen sticky top-0">
+    <aside className="w-[260px] h-screen sticky top-0 flex flex-col border-r bg-gradient-to-b from-sky-50 to-white border-sky-100">
 
       {/* BRAND */}
-      <div className="p-7 flex items-center gap-3 border-b border-white/5">
-        <div className="w-10 h-10 bg-[#9ef01a] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(158,240,26,0.4)]">
-          <Star className="w-6 h-6 text-[#0a1a00]" />
+      <div className="p-6 flex items-center gap-3 border-b border-sky-100">
+
+        <div className="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center shadow-lg">
+          <Star className="w-5 h-5 text-white" />
         </div>
 
-        <span className="font-black text-[#9ef01a] text-2xl tracking-[2px] uppercase">
-          Amz<span className="text-white">RAG</span>
-        </span>
+        <div className="text-xl font-black tracking-wide text-sky-600">
+          Amz<span className="text-slate-700">RAG</span>
+        </div>
+
       </div>
 
       {/* NAV */}
-      <nav className="flex-1 p-4 space-y-2 mt-4">
+      <nav className="flex-1 p-4 space-y-2">
+
         {navigation.map((item) => {
           const active = isActive(item.href)
 
@@ -51,45 +53,40 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 active
-                  ? 'bg-[#9ef01a]/10 text-[#9ef01a] border border-[#9ef01a]/20 font-semibold'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                  ? 'bg-sky-100 text-sky-600 font-semibold shadow-sm'
+                  : 'text-slate-500 hover:bg-sky-50 hover:text-sky-600'
               }`}
             >
-              <item.icon className={`w-5 h-5 ${active ? 'text-[#9ef01a]' : ''}`} />
+              <item.icon className={`w-5 h-5 ${active ? 'text-sky-600' : ''}`} />
               <span className="text-sm">{item.name}</span>
             </Link>
           )
         })}
+
       </nav>
 
       {/* FOOTER */}
-      <div className="p-4 border-t border-white/5 space-y-4">
+      <div className="p-4 border-t border-sky-100">
 
-        {/* THEME */}
-        <div className="flex items-center justify-between px-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Theme
-          </span>
-          <ThemeToggle />
-        </div>
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-sky-50">
 
-        {/* BOT STATUS */}
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#111827] border border-white/5">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#9ef01a] to-[#7acc00] flex items-center justify-center text-black font-bold">
-            AR
+          <div className="w-9 h-9 rounded-lg bg-sky-500 flex items-center justify-center text-white font-bold">
+            AI
           </div>
 
           <div>
-            <p className="text-xs font-semibold text-white">AmzRAG Assistant</p>
-            <p className="text-[10px] text-[#9ef01a] uppercase tracking-widest">
+            <p className="text-xs font-semibold text-slate-700">AmzRAG Assistant</p>
+            <p className="text-[10px] text-sky-500 font-semibold uppercase">
               Online
             </p>
           </div>
+
         </div>
 
       </div>
+
     </aside>
   )
 }
