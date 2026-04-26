@@ -14,8 +14,8 @@ sqlalchemy
 psycopg2-binary
 
 pypdf
+python-docx
 python-multipart
 
 requests
-
 huggingface_hub>=0.24.0
