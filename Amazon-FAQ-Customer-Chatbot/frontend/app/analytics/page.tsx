@@ -1,9 +1,9 @@
 'use client'
+import DashboardLayout from '../../components/dashboard/DashboardLayout'
+import { MetricCard } from '../../components/dashboard/MetricCard'
+import { API_URL } from '../../lib/config'
+import { useState, useEffect } from 'react'                              
 
-import { useState, useEffect } from 'react'
-import DashboardLayout from '@/components/dashboard/DashboardLayout'
-import { MetricGrid } from '@/components/dashboard/MetricCard'
-import { API_URL } from '@/lib/config'
 
 export default function AnalyticsPage() {
 
