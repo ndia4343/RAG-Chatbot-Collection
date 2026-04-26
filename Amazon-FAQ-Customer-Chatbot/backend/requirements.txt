@@ -3,6 +3,7 @@ uvicorn
 
 numpy
 pandas
+numpy<2
 
 torch
 transformers
