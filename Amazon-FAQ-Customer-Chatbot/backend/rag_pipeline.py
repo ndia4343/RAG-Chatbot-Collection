@@ -81,7 +81,6 @@ class AmazonRAG:
 
         new_docs = []
 
-        # CSV
         if path.endswith(".csv"):
 
             df = pd.read_csv(path)
@@ -91,7 +90,6 @@ class AmazonRAG:
             for text in df[col].astype(str).tolist():
                 new_docs.extend(self.chunk_text(text))
 
-        # PDF
         elif path.endswith(".pdf"):
 
             reader = PdfReader(path)
@@ -103,7 +101,6 @@ class AmazonRAG:
 
             new_docs.extend(self.chunk_text(full_text))
 
-        # TXT / MD
         elif path.endswith(".txt") or path.endswith(".md"):
 
             with open(path, "r", encoding="utf-8") as f:
@@ -111,7 +108,6 @@ class AmazonRAG:
 
             new_docs.extend(self.chunk_text(text))
 
-        # DOCX
         elif path.endswith(".docx"):
 
             doc = Document(path)
@@ -129,7 +125,7 @@ class AmazonRAG:
         self.save_all()
 
     # -------------------------
-    # REBUILD VECTOR INDEX
+    # REBUILD FAISS INDEX
     # -------------------------
     def rebuild_index(self):
 
@@ -192,16 +188,17 @@ class AmazonRAG:
 
         API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
 
-        headers = {
-            "Authorization": f"Bearer {os.getenv('HF_API_KEY')}"
-        }
+        headers = {}
+
+        if os.getenv("HF_API_KEY"):
+            headers["Authorization"] = f"Bearer {os.getenv('HF_API_KEY')}"
 
         prompt = f"""
 You are an intelligent support AI.
 
 Rules:
-- Use ONLY the context
-- If answer is missing say "I don't know"
+- Use ONLY the provided context
+- If answer is not in context say "I don't know"
 
 Context:
 {context}
