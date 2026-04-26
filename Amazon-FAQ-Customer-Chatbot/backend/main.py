@@ -237,7 +237,6 @@ def stats(db: Session = Depends(get_db)):
         "helpful_rate": f"{helpful_rate}%"
     }
 
-
 # ------------------------------------------------
 # SETTINGS
 # ------------------------------------------------
@@ -250,6 +249,9 @@ def get_settings():
 @app.post("/settings")
 def update_settings(data: dict):
 
-    settings.update(data)
+    for k, v in data.items():
+        if k in settings:
+            settings[k] = v
 
     return {"settings": settings}
+
