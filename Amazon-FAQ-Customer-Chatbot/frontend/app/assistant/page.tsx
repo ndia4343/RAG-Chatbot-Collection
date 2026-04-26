@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { API_URL } from '@/lib/config'
 
 interface Message {
@@ -18,7 +17,7 @@ export default function AssistantPage() {
     {
       id: '1',
       role: 'assistant',
-      content: 'Welcome to KnowledgeRAG AI. Ask anything from your knowledge base.'
+      content: 'Hi 👋 I am your KnowledgeRAG Assistant. Ask anything.'
     }
   ])
 
@@ -33,144 +32,118 @@ export default function AssistantPage() {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!input.trim()) return
 
-    const userMessage: Message = {
+    const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: input
     }
 
-    setMessages(m => [...m, userMessage])
+    setMessages(prev => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
     try {
-
       const res = await fetch(`${API_URL}/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: userMessage.content })
+        body: JSON.stringify({ question: userMsg.content })
       })
 
       const data = await res.json()
 
-      const aiMessage: Message = {
-        id: (Date.now()+1).toString(),
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.answer || 'No relevant information found.',
+        content: data.answer || 'No answer found.',
         confidence: data.confidence,
         sources: data.sources
       }
 
-      setMessages(m => [...m, aiMessage])
+      setMessages(prev => [...prev, botMsg])
 
-    } catch (err) {
-
-      setMessages(m => [
-        ...m,
+    } catch {
+      setMessages(prev => [
+        ...prev,
         {
-          id: (Date.now()+1).toString(),
+          id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: '⚠️ AI server unreachable.'
+          content: '⚠️ Server error. Try again.'
         }
       ])
-
     }
 
     setLoading(false)
   }
 
   return (
+    <div className="p-6 flex flex-col h-screen max-w-4xl mx-auto">
 
-    <DashboardLayout>
+      <h1 className="text-2xl font-bold mb-4">
+        AI Assistant
+      </h1>
 
-      <div className="flex flex-col h-[calc(100vh-140px)] max-w-4xl mx-auto">
+      {/* CHAT BOX */}
+      <div className="flex-1 overflow-y-auto space-y-4 p-2">
 
-        <h1 className="text-3xl font-bold mb-6">
-          KnowledgeRAG Assistant
-        </h1>
-
-        {/* CHAT AREA */}
-
-        <div className="flex-1 overflow-y-auto space-y-4">
-
-          {messages.map((m) => (
-
-            <div
-              key={m.id}
-              className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-
-              <div
-                className={`max-w-[70%] p-4 rounded-xl ${
-                  m.role === 'user'
-                    ? 'bg-[#9ef01a] text-black'
-                    : 'bg-white/10'
-                }`}
-              >
-
-                <p>{m.content}</p>
-
-                {m.confidence && (
-
-                  <p className="text-xs text-[#9ef01a] mt-2">
-                    Confidence {Math.round(m.confidence * 100)}%
-                  </p>
-
-                )}
-
-                {m.sources && (
-
-                  <div className="text-xs text-gray-400 mt-2">
-                    Sources: {m.sources.join(', ')}
-                  </div>
-
-                )}
-
-              </div>
-
-            </div>
-
-          ))}
-
-          {loading && (
-
-            <p className="text-[#9ef01a] text-sm">
-              Searching knowledge base...
-            </p>
-
-          )}
-
-          <div ref={endRef} />
-
-        </div>
-
-
-        {/* INPUT */}
-
-        <form onSubmit={sendMessage} className="flex gap-3 mt-6">
-
-          <input
-            className="flex-1 p-3 rounded bg-black/30 border border-white/10"
-            value={input}
-            onChange={(e)=>setInput(e.target.value)}
-            placeholder="Ask something..."
-          />
-
-          <button
-            disabled={loading}
-            className="bg-[#9ef01a] px-6 py-2 rounded text-black font-bold disabled:opacity-50"
+        {messages.map(m => (
+          <div
+            key={m.id}
+            className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            {loading ? 'Thinking...' : 'Send'}
-          </button>
+            <div
+              className={`p-4 rounded-xl max-w-[70%] shadow-sm ${
+                m.role === 'user'
+                  ? 'bg-sky-500 text-white'
+                  : 'bg-white border text-slate-800'
+              }`}
+            >
+              <p>{m.content}</p>
 
-        </form>
+              {m.confidence && (
+                <p className="text-xs mt-2 text-sky-600">
+                  Confidence: {Math.round(m.confidence * 100)}%
+                </p>
+              )}
 
+              {m.sources && (
+                <p className="text-xs text-slate-400 mt-1">
+                  Sources: {m.sources.join(', ')}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {loading && (
+          <p className="text-sky-500 text-sm">
+            Thinking...
+          </p>
+        )}
+
+        <div ref={endRef} />
       </div>
 
-    </DashboardLayout>
+      {/* INPUT */}
+      <form onSubmit={sendMessage} className="flex gap-3 mt-4">
 
+        <input
+          className="flex-1 border rounded-lg p-3"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask something..."
+        />
+
+        <button
+          disabled={loading}
+          className="bg-sky-500 text-white px-6 py-2 rounded-lg font-semibold"
+        >
+          Send
+        </button>
+
+      </form>
+
+    </div>
   )
 }
