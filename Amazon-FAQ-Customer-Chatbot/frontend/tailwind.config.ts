@@ -14,22 +14,22 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: "#9ef01a",
-          hover: "#ccff33",
-          dark: "#7acc00",
+          DEFAULT: "#0ea5e9", // sky blue
+          hover: "#38bdf8",
+          dark: "#0284c7",
         },
 
         dark: {
-          bg: "#0a0f1a",
-          secondary: "#0d1526",
-          card: "rgba(30, 41, 59, 0.4)",
-          border: "rgba(158, 240, 26, 0.12)",
+          bg: "#f0f9ff",        // light sky background
+          secondary: "#e0f2fe", // soft panels
+          card: "#ffffff",
+          border: "#bae6fd",
         },
 
         light: {
           bg: "#ffffff",
           secondary: "#f8fafc",
-          text: "#1e293b",
+          text: "#0f172a",
           border: "#e2e8f0",
         },
       },
@@ -40,7 +40,7 @@ const config: Config = {
       },
 
       boxShadow: {
-        neon: "0 0 12px rgba(158,240,26,0.4)",
+        neon: "0 0 12px rgba(14,165,233,0.35)",
       },
     },
   },
