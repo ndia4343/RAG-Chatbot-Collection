@@ -10,25 +10,3 @@ export const metadata: Metadata = {
   description: "RAG-powered SaaS AI Assistant",
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-[#0a0f1a] text-white antialiased`}>
-
-        {/* Theme system (dark/light toggle support) */}
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-        >
-          {children}
-        </ThemeProvider>
-
-      </body>
-    </html>
-  )
-}
