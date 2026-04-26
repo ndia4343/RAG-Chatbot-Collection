@@ -1,68 +1,44 @@
 'use client'
 
-import React from 'react'
+import { MetricGrid } from '@/components/dashboard/MetricCard'
 
-interface Metric {
-  icon: string | React.ReactNode
-  value: string
-  label: string
-  change?: string
-  changeType?: 'up' | 'down'
-}
+export default function AnalyticsPage() {
 
-interface MetricGridProps {
-  metrics: Metric[]
-}
+  const metrics = [
+    {
+      icon: '📊',
+      value: '1.2K',
+      label: 'Queries',
+      change: '+12%',
+      changeType: 'up' as const,
+    },
+    {
+      icon: '⚡',
+      value: '89%',
+      label: 'Accuracy',
+      change: '+3%',
+      changeType: 'up' as const,
+    },
+    {
+      icon: '💬',
+      value: '320',
+      label: 'Feedbacks',
+      change: '-2%',
+      changeType: 'down' as const,
+    },
+    {
+      icon: '📁',
+      value: '45',
+      label: 'Docs',
+    },
+  ]
 
-/* ---------------- CARD ---------------- */
-export function MetricCard({
-  icon,
-  value,
-  label,
-  change,
-  changeType,
-}: Metric) {
   return (
-    <div className="card">
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Analytics</h1>
 
-      <div className="flex justify-between items-start mb-3">
-        <div className="text-2xl">{icon}</div>
-
-        {change && (
-          <span
-            className="text-xs px-2 py-1 rounded-full font-semibold"
-            style={{
-              background:
-                changeType === 'up'
-                  ? 'rgba(34,197,94,0.15)'
-                  : 'rgba(239,68,68,0.1)',
-              color: changeType === 'up' ? '#22c55e' : '#ef4444',
-            }}
-          >
-            {change}
-          </span>
-        )}
-      </div>
-
-      <div className="text-2xl font-bold text-sky-600 mb-1">
-        {value}
-      </div>
-
-      <div className="text-xs uppercase tracking-wider text-slate-500">
-        {label}
-      </div>
-
-    </div>
-  )
-}
-
-/* ---------------- GRID (FIXED ERROR) ---------------- */
-export function MetricGrid({ metrics }: MetricGridProps) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-      {metrics.map((m, i) => (
-        <MetricCard key={i} {...m} />
-      ))}
+      {/* FIXED COMPONENT */}
+      <MetricGrid metrics={metrics} />
     </div>
   )
 }
