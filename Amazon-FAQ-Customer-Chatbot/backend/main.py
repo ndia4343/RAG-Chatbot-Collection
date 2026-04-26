@@ -5,37 +5,45 @@ from sqlalchemy import func
 import os
 import shutil
 
-from .database import SearchLog, Feedback, get_db
+from .database import SearchLog, Feedback, get_db, init_db
 from .rag_pipeline import AmazonRAG
 
-# -----------------------------
-# APP INIT
-# -----------------------------
+
 app = FastAPI(title="AmzRAG Backend", version="1.0")
 
-# -----------------------------
+
+# ------------------------------------------------
+# Startup
+# ------------------------------------------------
+
+@app.on_event("startup")
+def startup():
+    init_db()
+
+
+# ------------------------------------------------
 # CORS
-# -----------------------------
+# ------------------------------------------------
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # change to frontend URL in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# -----------------------------
-# RAG ENGINE INIT
-# -----------------------------
+
+# ------------------------------------------------
+# RAG ENGINE
+# ------------------------------------------------
+
 engine = AmazonRAG()
 
-# Ensure dataset folder exists
-DATASET_PATH = "dataset"
+DATASET_PATH = os.path.abspath("dataset")
 os.makedirs(DATASET_PATH, exist_ok=True)
 
-# -----------------------------
-# SETTINGS (SaaS Controls)
-# -----------------------------
+
 settings = {
     "model": "mistral-7b",
     "temperature": 0.7,
@@ -43,44 +51,40 @@ settings = {
     "confidence": 0.6
 }
 
-# -----------------------------
-# HEALTH CHECK
-# -----------------------------
+
+# ------------------------------------------------
+# HEALTH
+# ------------------------------------------------
+
 @app.get("/")
 def health():
-    return {
-        "status": "online",
-        "engine": "ready"
-    }
+    return {"status": "online", "engine": "ready"}
 
 
-# -----------------------------
-# QUERY ENDPOINT
-# -----------------------------
+# ------------------------------------------------
+# QUERY
+# ------------------------------------------------
+
 @app.post("/query")
 async def query_bot(request: dict, db: Session = Depends(get_db)):
 
     question = request.get("question")
 
-    if not question or not question.strip():
-        raise HTTPException(
-            status_code=400,
-            detail="Question cannot be empty"
-        )
+    if not question:
+        raise HTTPException(400, "Question cannot be empty")
 
     try:
 
         output = engine.search(question)
 
-        answer = output.get("answer", "No answer found.")
-        confidence = output.get("confidence", 0.0)
-        sources = output.get("sources", [])
+        answer = output["answer"]
+        confidence = output["confidence"]
+        sources = output["sources"]
 
-        # Save search log
         log = SearchLog(
             query=question,
             answer_generated=answer,
-            sources_used=",".join(sources) if sources else ""
+            sources_used=sources
         )
 
         db.add(log)
@@ -95,16 +99,14 @@ async def query_bot(request: dict, db: Session = Depends(get_db)):
         }
 
     except Exception as e:
-        print(f"QUERY ERROR: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="AI processing failed"
-        )
+        print("QUERY ERROR:", e)
+        raise HTTPException(500, "AI processing failed")
 
 
-# -----------------------------
-# FILE UPLOAD + INDEX
-# -----------------------------
+# ------------------------------------------------
+# UPLOAD FILE
+# ------------------------------------------------
+
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
 
@@ -113,48 +115,37 @@ async def upload_file(file: UploadFile = File(...)):
     ext = file.filename.split(".")[-1].lower()
 
     if ext not in allowed:
-        raise HTTPException(
-            status_code=400,
-            detail="File type not supported"
-        )
+        raise HTTPException(400, "File type not supported")
+
+    filename = os.path.basename(file.filename)
+    path = os.path.join(DATASET_PATH, filename)
+
+    if os.path.exists(path):
+        raise HTTPException(400, "File already exists")
 
     try:
 
-        filename = os.path.basename(file.filename)
-        file_path = os.path.join(DATASET_PATH, filename)
-
-        # Prevent duplicate uploads
-        if os.path.exists(file_path):
-            raise HTTPException(
-                status_code=400,
-                detail="File already exists"
-            )
-
-        with open(file_path, "wb") as buffer:
+        with open(path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # Add file to RAG index
-        engine.add_file(file_path)
+        engine.add_file(path)
 
         return {
             "status": "success",
-            "filename": filename,
-            "message": "File uploaded & indexed"
+            "filename": filename
         }
 
     except Exception as e:
-        print(f"UPLOAD ERROR: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Upload failed"
-        )
+        print("UPLOAD ERROR:", e)
+        raise HTTPException(500, "Upload failed")
 
 
-# -----------------------------
-# LIST KNOWLEDGE FILES
-# -----------------------------
+# ------------------------------------------------
+# LIST FILES
+# ------------------------------------------------
+
 @app.get("/list-files")
-async def list_files():
+def list_files():
 
     files = []
 
@@ -162,9 +153,9 @@ async def list_files():
 
         for f in os.listdir(DATASET_PATH):
 
-            full_path = os.path.join(DATASET_PATH, f)
+            path = os.path.join(DATASET_PATH, f)
 
-            size = round(os.path.getsize(full_path) / 1024, 1)
+            size = round(os.path.getsize(path) / 1024, 1)
 
             files.append({
                 "name": f,
@@ -174,96 +165,83 @@ async def list_files():
     return files
 
 
-# -----------------------------
+# ------------------------------------------------
 # DELETE FILE
-# -----------------------------
+# ------------------------------------------------
+
 @app.delete("/delete-file/{filename}")
-async def delete_file(filename: str):
+def delete_file(filename: str):
 
-    file_path = os.path.join(DATASET_PATH, filename)
+    path = os.path.join(DATASET_PATH, filename)
 
-    if os.path.exists(file_path):
+    if not os.path.exists(path):
+        raise HTTPException(404, "File not found")
 
-        os.remove(file_path)
+    os.remove(path)
 
-        # Reload vector index safely
-        engine.load_persisted()
+    engine.load_persisted()
 
-        return {"message": "deleted"}
-
-    raise HTTPException(
-        status_code=404,
-        detail="File not found"
-    )
+    return {"message": "deleted"}
 
 
-# -----------------------------
-# FEEDBACK SYSTEM
-# -----------------------------
+# ------------------------------------------------
+# FEEDBACK
+# ------------------------------------------------
+
 @app.post("/feedback")
-def submit_feedback(data: dict, db: Session = Depends(get_db)):
+def feedback(data: dict, db: Session = Depends(get_db)):
 
     log_id = data.get("log_id")
-    helpful = data.get("helpful")
-    comment = data.get("comment", "")
+    rating = data.get("rating")
+    comment = data.get("comment")
 
-    if log_id is None:
-        raise HTTPException(
-            status_code=400,
-            detail="log_id required"
-        )
-
-    # Validate log exists
-    log = db.query(SearchLog).filter(
-        SearchLog.id == log_id
-    ).first()
+    log = db.query(SearchLog).filter(SearchLog.id == log_id).first()
 
     if not log:
-        raise HTTPException(
-            status_code=404,
-            detail="Search log not found"
-        )
+        raise HTTPException(404, "Log not found")
 
-    feedback = Feedback(
+    fb = Feedback(
         log_id=log_id,
-        is_helpful=helpful,
+        rating=rating,
         comment=comment
     )
 
-    db.add(feedback)
+    db.add(fb)
     db.commit()
 
-    return {"status": "feedback recorded"}
+    return {"status": "recorded"}
 
 
-# -----------------------------
-# ANALYTICS STATS
-# -----------------------------
+# ------------------------------------------------
+# STATS
+# ------------------------------------------------
+
 @app.get("/api/stats")
-def get_stats(db: Session = Depends(get_db)):
+def stats(db: Session = Depends(get_db)):
 
     total_logs = db.query(func.count(SearchLog.id)).scalar() or 0
 
-    helpful = db.query(func.count(Feedback.id)).filter(
-        Feedback.is_helpful == True
-    ).scalar() or 0
-
     total_feedback = db.query(func.count(Feedback.id)).scalar() or 0
 
-    if total_feedback == 0:
-        helpful_rate = "0%"
-    else:
-        helpful_rate = f"{round((helpful / total_feedback) * 100, 1)}%"
+    good = db.query(func.count(Feedback.id)).filter(
+        Feedback.rating == 3
+    ).scalar() or 0
+
+    helpful_rate = 0
+
+    if total_feedback:
+        helpful_rate = round((good / total_feedback) * 100, 1)
 
     return {
         "total_logs": total_logs,
-        "helpful_rate": helpful_rate
+        "helpful_rate": f"{helpful_rate}%"
     }
 
 
-# -----------------------------
-# SETTINGS API
-# -----------------------------
+# ------------------------------------------------
+# SETTINGS
+# ------------------------------------------------
+
 @app.get("/settings")
 def get_settings():
     return settings
@@ -274,7 +252,4 @@ def update_settings(data: dict):
 
     settings.update(data)
 
-    return {
-        "status": "updated",
-        "settings": settings
-    }
+    return {"settings": settings}
