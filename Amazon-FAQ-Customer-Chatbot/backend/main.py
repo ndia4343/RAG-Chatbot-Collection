@@ -7,6 +7,7 @@ import shutil
 
 from .database import SearchLog, Feedback, get_db, init_db
 from .rag_pipeline import AmazonRAG
+from .settings import get_settings, update_settings
 
 
 app = FastAPI(title="AmzRAG Backend", version="1.0")
@@ -15,7 +16,6 @@ app = FastAPI(title="AmzRAG Backend", version="1.0")
 # ------------------------------------------------
 # Startup
 # ------------------------------------------------
-
 @app.on_event("startup")
 def startup():
     init_db()
@@ -24,7 +24,6 @@ def startup():
 # ------------------------------------------------
 # CORS
 # ------------------------------------------------
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -37,25 +36,15 @@ app.add_middleware(
 # ------------------------------------------------
 # RAG ENGINE
 # ------------------------------------------------
-
 engine = AmazonRAG()
 
 DATASET_PATH = os.path.abspath("dataset")
 os.makedirs(DATASET_PATH, exist_ok=True)
 
 
-settings = {
-    "model": "mistral-7b",
-    "temperature": 0.7,
-    "top_k": 5,
-    "confidence": 0.6
-}
-
-
 # ------------------------------------------------
 # HEALTH
 # ------------------------------------------------
-
 @app.get("/")
 def health():
     return {"status": "online", "engine": "ready"}
@@ -64,7 +53,6 @@ def health():
 # ------------------------------------------------
 # QUERY
 # ------------------------------------------------
-
 @app.post("/query")
 async def query_bot(request: dict, db: Session = Depends(get_db)):
 
@@ -74,17 +62,12 @@ async def query_bot(request: dict, db: Session = Depends(get_db)):
         raise HTTPException(400, "Question cannot be empty")
 
     try:
-
         output = engine.search(question)
-
-        answer = output["answer"]
-        confidence = output["confidence"]
-        sources = output["sources"]
 
         log = SearchLog(
             query=question,
-            answer_generated=answer,
-            sources_used=sources
+            answer_generated=output["answer"],
+            sources_used=output["sources"]
         )
 
         db.add(log)
@@ -92,9 +75,9 @@ async def query_bot(request: dict, db: Session = Depends(get_db)):
         db.refresh(log)
 
         return {
-            "answer": answer,
-            "confidence": confidence,
-            "sources": sources,
+            "answer": output["answer"],
+            "confidence": output["confidence"],
+            "sources": output["sources"],
             "log_id": log.id
         }
 
@@ -106,7 +89,6 @@ async def query_bot(request: dict, db: Session = Depends(get_db)):
 # ------------------------------------------------
 # UPLOAD FILE
 # ------------------------------------------------
-
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
 
@@ -124,7 +106,6 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(400, "File already exists")
 
     try:
-
         with open(path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
@@ -143,18 +124,14 @@ async def upload_file(file: UploadFile = File(...)):
 # ------------------------------------------------
 # LIST FILES
 # ------------------------------------------------
-
 @app.get("/list-files")
 def list_files():
 
     files = []
 
     if os.path.exists(DATASET_PATH):
-
         for f in os.listdir(DATASET_PATH):
-
             path = os.path.join(DATASET_PATH, f)
-
             size = round(os.path.getsize(path) / 1024, 1)
 
             files.append({
@@ -168,7 +145,6 @@ def list_files():
 # ------------------------------------------------
 # DELETE FILE
 # ------------------------------------------------
-
 @app.delete("/delete-file/{filename}")
 def delete_file(filename: str):
 
@@ -178,7 +154,6 @@ def delete_file(filename: str):
         raise HTTPException(404, "File not found")
 
     os.remove(path)
-
     engine.load_persisted()
 
     return {"message": "deleted"}
@@ -187,7 +162,6 @@ def delete_file(filename: str):
 # ------------------------------------------------
 # FEEDBACK
 # ------------------------------------------------
-
 @app.post("/feedback")
 def feedback(data: dict, db: Session = Depends(get_db)):
 
@@ -215,12 +189,10 @@ def feedback(data: dict, db: Session = Depends(get_db)):
 # ------------------------------------------------
 # STATS
 # ------------------------------------------------
-
 @app.get("/api/stats")
 def stats(db: Session = Depends(get_db)):
 
     total_logs = db.query(func.count(SearchLog.id)).scalar() or 0
-
     total_feedback = db.query(func.count(Feedback.id)).scalar() or 0
 
     good = db.query(func.count(Feedback.id)).filter(
@@ -228,7 +200,6 @@ def stats(db: Session = Depends(get_db)):
     ).scalar() or 0
 
     helpful_rate = 0
-
     if total_feedback:
         helpful_rate = round((good / total_feedback) * 100, 1)
 
@@ -237,21 +208,15 @@ def stats(db: Session = Depends(get_db)):
         "helpful_rate": f"{helpful_rate}%"
     }
 
-# ------------------------------------------------
-# SETTINGS
-# ------------------------------------------------
 
+# ------------------------------------------------
+# SETTINGS (SYNCED FROM settings.py)
+# ------------------------------------------------
 @app.get("/settings")
-def get_settings():
-    return settings
+def get_settings_api():
+    return get_settings()
 
 
 @app.post("/settings")
-def update_settings(data: dict):
-
-    for k, v in data.items():
-        if k in settings:
-            settings[k] = v
-
-    return {"settings": settings}
-
+def update_settings_api(data: dict):
+    return update_settings(data)
