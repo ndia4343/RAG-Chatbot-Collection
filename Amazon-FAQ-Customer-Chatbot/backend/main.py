@@ -5,7 +5,7 @@ from sqlalchemy import func
 import os
 import shutil
 
-from database import SearchLog, Feedback, get_db
+from backend.database import SearchLog, Feedback, get_db
 from rag_pipeline import AmazonRAG
 
 # -----------------------------
