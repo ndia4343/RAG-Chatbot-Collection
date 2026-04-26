@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import DashboardLayout from '@/components/dashboard/DashboardLayout'
+import DashboardLayout from '../../components/dashboard/DashboardLayout'
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
