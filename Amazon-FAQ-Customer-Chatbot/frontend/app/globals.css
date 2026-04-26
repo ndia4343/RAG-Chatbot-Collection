@@ -2,113 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-/* -----------------------------
-   DESIGN TOKENS (DARK DEFAULT)
------------------------------- */
+/* =========================
+   SKY BLUE SAAS THEME
+========================= */
+
 :root {
-  --brand: #9ef01a;
+  --bg: #f7fbff;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
 
-  --bg-main: #020617;
-  --card-bg: rgba(17, 24, 39, 0.7);
-  --sidebar-bg: #0d1526;
+  --primary: #38bdf8;
+  --primary-dark: #0ea5e9;
 
-  --border-main: rgba(255, 255, 255, 0.08);
-
-  --text-main: #f1f5f9;
-  --text-secondary: #94a3b8;
-
-  /* SaaS Semantic Colors */
-  --success: #22c55e;
-  --warning: #eab308;
-  --danger: #ef4444;
-  --info: #38bdf8;
-
-  /* Glow */
-  --brand-glow: rgba(158, 240, 26, 0.35);
+  --border: #e2e8f0;
 }
 
-/* -----------------------------
-   LIGHT MODE (FIXED)
------------------------------- */
-.light {
-  --bg-main: #f8fafc;
-  --card-bg: rgba(255, 255, 255, 0.85);
-  --sidebar-bg: #ffffff;
-
-  --text-main: #0f172a;
-  --text-secondary: #475569;
-
-  --border-main: rgba(15, 23, 42, 0.08);
-
-  /* soften brand in light mode */
-  --brand-glow: rgba(158, 240, 26, 0.15);
+/* BASE */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui;
 }
 
-/* -----------------------------
-   BASE STYLES
------------------------------- */
-@layer base {
-  body {
-    @apply antialiased transition-colors duration-500;
-    background-color: var(--bg-main);
-    color: var(--text-main);
-  }
+/* CARD */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  transition: 0.2s;
 }
 
-/* -----------------------------
-   COMPONENT SYSTEM (SAAS UI KIT)
------------------------------- */
-@layer components {
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(56, 189, 248, 0.15);
+}
 
-  .glass-card,
-  .settings-card {
-    @apply border rounded-2xl p-6 backdrop-blur-xl transition-all duration-300;
-    background-color: var(--card-bg);
-    border-color: var(--border-main);
-  }
+/* TEXT */
+.text-muted {
+  color: var(--muted);
+}
 
-  /* TEXT SYSTEM */
-  .dashboard-text {
-    color: var(--text-main);
-  }
+.text-primary {
+  color: var(--primary-dark);
+}
 
-  .muted-text {
-    color: var(--text-secondary);
-  }
+/* BUTTON */
+.btn {
+  background: var(--primary);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+}
 
-  .accent-text {
-    color: var(--brand);
-  }
+/* INPUT */
+input, textarea, select {
+  border: 1px solid var(--border);
+  padding: 10px;
+  border-radius: 10px;
+  outline: none;
+}
 
-  .lime-glow {
-    color: var(--brand);
-    text-shadow: 0 0 18px var(--brand-glow);
-  }
-
-  .readable-text {
-    color: var(--text-main) !important;
-    opacity: 1 !important;
-  }
-
-  /* BUTTON STATES */
-  .btn-success { color: var(--success); }
-  .btn-warning { color: var(--warning); }
-  .btn-danger { color: var(--danger); }
-  .btn-info { color: var(--info); }
-
-  /* RANGE INPUT */
-  input[type='range'] {
-    @apply accent-[#9ef01a] cursor-pointer;
-  }
-
-  /* LOGO */
-  .logo-glow {
-    box-shadow: 0 0 25px var(--brand-glow);
-  }
-
-  /* CARD HOVER (SAAS FEEL) */
-  .glass-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-  }
+input:focus {
+  border-color: var(--primary);
 }
