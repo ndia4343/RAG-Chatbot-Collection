@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { API_URL } from '@/lib/config'
+import { API_URL } from '../../lib/config'
 
 export default function KnowledgePage() {
 
