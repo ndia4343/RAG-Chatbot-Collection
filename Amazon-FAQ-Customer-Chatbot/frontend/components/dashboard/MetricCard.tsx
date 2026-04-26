@@ -14,9 +14,9 @@ interface MetricGridProps {
 
 export function MetricCard({ icon, value, label, change, changeType }: Metric) {
   return (
-    <div className="card">
+    <div className="bg-white rounded-2xl shadow-sm border border-sky-100 p-5 hover:shadow-md transition">
 
-      {/* TOP ROW */}
+      {/* TOP */}
       <div className="flex justify-between items-start mb-3">
 
         <div className="text-2xl">{icon}</div>
@@ -27,10 +27,10 @@ export function MetricCard({ icon, value, label, change, changeType }: Metric) {
             style={{
               background:
                 changeType === 'up'
-                  ? 'rgba(56,189,248,0.15)'
+                  ? 'rgba(14,165,233,0.12)'
                   : 'rgba(239,68,68,0.1)',
               color:
-                changeType === 'up' ? '#0ea5e9' : '#ef4444'
+                changeType === 'up' ? '#0284c7' : '#ef4444'
             }}
           >
             {change}
@@ -40,7 +40,7 @@ export function MetricCard({ icon, value, label, change, changeType }: Metric) {
       </div>
 
       {/* VALUE */}
-      <div className="text-2xl font-bold text-sky-600 mb-1">
+      <div className="text-3xl font-bold text-sky-600 mb-1">
         {value}
       </div>
 
