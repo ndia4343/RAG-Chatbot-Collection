@@ -6,29 +6,26 @@ interface BarChartProps {
 }
 
 export function BarChart({ data, labels }: BarChartProps) {
-
   const max = Math.max(...data, 1)
 
   return (
     <div className="flex items-end gap-2 h-40">
-
       {data.map((value, i) => (
         <div key={i} className="flex flex-col items-center flex-1">
 
           <div
-            className="w-full rounded bg-brand transition-all hover:opacity-80"
+            className="w-full rounded bg-sky-500 transition-all hover:opacity-80"
             style={{ height: `${(value / max) * 100}%` }}
           />
 
           {labels && (
-            <span className="text-xs mt-1 text-gray-400">
+            <span className="text-xs mt-1 text-slate-500">
               {labels[i]}
             </span>
           )}
 
         </div>
       ))}
-
     </div>
   )
 }
@@ -44,14 +41,14 @@ export function ProgressBar({
     <div>
 
       <div className="flex justify-between text-sm mb-2">
-        <span>{label}</span>
-        <span className="text-brand">{value}%</span>
+        <span className="text-slate-700">{label}</span>
+        <span className="text-sky-600 font-semibold">{value}%</span>
       </div>
 
-      <div className="h-2 bg-dark-secondary rounded-full overflow-hidden">
+      <div className="h-2 bg-sky-100 rounded-full overflow-hidden">
 
         <div
-          className="h-full bg-brand transition-all"
+          className="h-full bg-sky-500 transition-all"
           style={{ width: `${value}%` }}
         />
 
@@ -78,7 +75,7 @@ export function DonutChart({
         cx="60"
         cy="60"
         r={radius}
-        stroke="#1e293b"
+        stroke="#e0f2fe"
         strokeWidth="10"
         fill="none"
       />
@@ -87,7 +84,7 @@ export function DonutChart({
         cx="60"
         cy="60"
         r={radius}
-        stroke="#9ef01a"
+        stroke="#0ea5e9"
         strokeWidth="10"
         fill="none"
         strokeDasharray={circumference}
@@ -100,7 +97,7 @@ export function DonutChart({
         y="50%"
         dominantBaseline="middle"
         textAnchor="middle"
-        className="fill-white text-lg font-bold"
+        className="fill-slate-800 text-lg font-bold"
       >
         {value}%
       </text>
