@@ -1,9 +1,9 @@
 fastapi
 uvicorn
 
-numpy
+numpy==1.26.4
+
 pandas
-numpy<2
 
 torch
 transformers
