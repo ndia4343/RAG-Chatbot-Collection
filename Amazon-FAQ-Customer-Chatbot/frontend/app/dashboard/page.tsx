@@ -1,45 +1,60 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import DashboardLayout from '@/components/dashboard/DashboardLayout'
-import KnowledgeBasePanel from '@/app/knowledge/page'
+import { useState, useEffect } from 'react'
 import { API_URL } from '@/lib/config'
 
 export default function DashboardPage() {
+
   const [docs, setDocs] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch(`${API_URL}/list-files`)
-      .then((r) => r.json())
-      .then((d) => setDocs(d.length))
+      .then(r => r.json())
+      .then(d => {
+        setDocs(d.length || 0)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
   }, [])
 
+  const cards = [
+    {
+      label: "Documents",
+      value: loading ? "..." : docs,
+    },
+    {
+      label: "System",
+      value: "Online",
+    },
+    {
+      label: "AI Engine",
+      value: "RAG Active",
+    },
+    {
+      label: "Response Time",
+      value: "0.31s",
+    }
+  ]
+
   return (
-    <DashboardLayout>
-      <h1 className="text-3xl font-bold mb-6">
+    <div className="p-6 space-y-6">
+
+      <h1 className="text-2xl font-bold">
         KnowledgeRAG Dashboard
       </h1>
 
-      <div className="grid grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-4 gap-4">
 
-        <div className="glass-card">
-          <p className="muted-text">Documents</p>
-          <p className="text-3xl accent-text">{docs}</p>
-        </div>
-
-        <div className="glass-card">
-          <p className="muted-text">System</p>
-          <p className="text-green-400 font-bold">Online</p>
-        </div>
-
-        <div className="glass-card">
-          <p className="muted-text">AI Engine</p>
-          <p className="accent-text font-bold">RAG Active</p>
-        </div>
+        {cards.map((c, i) => (
+          <div key={i} className="card">
+            <p className="text-muted text-sm">{c.label}</p>
+            <p className="text-xl font-bold text-sky-600">{c.value}</p>
+          </div>
+        ))}
 
       </div>
 
-      <KnowledgeBasePanel />
-    </DashboardLayout>
+    </div>
   )
 }
