@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { API_URL } from '../../lib/config'
+import { BRAND } from '@/lib/brand'
 
 interface Message {
   id: string
@@ -17,7 +18,7 @@ export default function AssistantPage() {
     {
       id: '1',
       role: 'assistant',
-      content: 'Hi 👋 I am your KnowledgeRAG Assistant. Ask anything.'
+      content: `Hi 👋 I am your ${BRAND.assistantName}. Ask anything.`
     }
   ])
 
@@ -81,7 +82,7 @@ export default function AssistantPage() {
     <div className="p-6 flex flex-col h-screen max-w-4xl mx-auto">
 
       <h1 className="text-2xl font-bold mb-4">
-        AI Assistant
+        {BRAND.name} Assistant
       </h1>
 
       {/* CHAT BOX */}
