@@ -1,20 +1,31 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { API_URL } from '../../lib/config'
+import { API_URL } from '@/lib/config'
+
+interface FileItem {
+  name: string
+  size: string
+}
 
 export default function KnowledgePage() {
-
-  const [files, setFiles] = useState<any[]>([])
+  const [files, setFiles] = useState<FileItem[]>([])
   const [uploading, setUploading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
+  // -----------------------------
+  // FETCH FILES
+  // -----------------------------
   const fetchFiles = async () => {
     try {
       const res = await fetch(`${API_URL}/list-files`)
       const data = await res.json()
       setFiles(Array.isArray(data) ? data : [])
-    } catch {
+    } catch (err) {
+      console.error('Failed to load files:', err)
       setFiles([])
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -22,6 +33,9 @@ export default function KnowledgePage() {
     fetchFiles()
   }, [])
 
+  // -----------------------------
+  // UPLOAD FILE
+  // -----------------------------
   const uploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -32,27 +46,52 @@ export default function KnowledgePage() {
     setUploading(true)
 
     try {
-      await fetch(`${API_URL}/upload`, {
+      const res = await fetch(`${API_URL}/upload`, {
         method: 'POST',
-        body: form
+        body: form,
       })
 
+      if (!res.ok) throw new Error('Upload failed')
+
       await fetchFiles()
-    } catch {
-      alert('Upload failed')
+    } catch (err) {
+      alert('Upload failed ❌')
+    } finally {
+      setUploading(false)
     }
-
-    setUploading(false)
   }
 
+  // -----------------------------
+  // DELETE FILE
+  // -----------------------------
   const deleteFile = async (name: string) => {
-    await fetch(`${API_URL}/delete-file/${name}`, {
-      method: 'DELETE'
-    })
+    try {
+      const res = await fetch(`${API_URL}/delete-file/${name}`, {
+        method: 'DELETE',
+      })
 
-    setFiles(prev => prev.filter(f => f.name !== name))
+      if (!res.ok) throw new Error('Delete failed')
+
+      setFiles((prev) => prev.filter((f) => f.name !== name))
+    } catch {
+      alert('Delete failed ❌')
+    }
   }
 
+  // -----------------------------
+  // LOADING STATE
+  // -----------------------------
+  if (loading) {
+    return (
+      <div className="p-6 text-sky-400 font-semibold">
+        Loading knowledge base...
+      </div>
+    )
+  }
+
+  // -----------------------------
+  // UI
+  // -----------------------------
   return (
     <div className="p-6 space-y-6">
 
@@ -60,15 +99,15 @@ export default function KnowledgePage() {
       <div className="flex justify-between items-center">
 
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold text-white">
             Knowledge Base
           </h1>
           <p className="text-sm text-slate-500">
-            Upload documents for AI training
+            Upload documents to power your RAG AI
           </p>
         </div>
 
-        <label className="bg-sky-500 text-white px-4 py-2 rounded-lg cursor-pointer">
+        <label className="bg-sky-500 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-sky-600 transition">
           {uploading ? 'Uploading...' : 'Upload'}
 
           <input
@@ -85,24 +124,24 @@ export default function KnowledgePage() {
 
         {files.length === 0 && (
           <p className="text-slate-400">
-            No files uploaded
+            No files uploaded yet
           </p>
         )}
 
         {files.map((f, i) => (
           <div
             key={i}
-            className="card flex justify-between items-center"
+            className="flex justify-between items-center p-4 rounded-xl bg-white/5 border border-white/10"
           >
 
             <div>
-              <p className="font-medium">{f.name}</p>
-              <p className="text-sm text-slate-500">{f.size}</p>
+              <p className="font-medium text-white">{f.name}</p>
+              <p className="text-sm text-slate-400">{f.size}</p>
             </div>
 
             <button
               onClick={() => deleteFile(f.name)}
-              className="text-red-500"
+              className="text-red-400 hover:text-red-300"
             >
               Delete
             </button>
